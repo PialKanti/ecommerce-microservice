@@ -1,1 +1,6 @@
 rootProject.name = 'ecommerce-microservice'
+
+include 'eureka-server'
+include 'api-gateway'
+include 'auth-service'
+include 'commons'

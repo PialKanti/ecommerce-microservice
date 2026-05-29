@@ -1,0 +1,8 @@
+// No 'org.springframework.boot' plugin — produces a plain library jar, not an executable fat jar.
+// 'java' plugin and Spring Boot BOM are inherited from the root subprojects block.
+
+dependencies {
+    implementation 'jakarta.persistence:jakarta.persistence-api'
+    implementation 'org.springframework.data:spring-data-commons'
+    implementation 'com.fasterxml.jackson.core:jackson-annotations'
+}
