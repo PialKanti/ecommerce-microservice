@@ -16,7 +16,7 @@ public class TokenBlacklistCheckService {
     private final StringRedisTemplate redisTemplate;
 
     public boolean isBlacklisted(String rawToken) {
-        return redisTemplate.hasKey(KEY_PREFIX + sha256(rawToken));
+        return Boolean.TRUE.equals(redisTemplate.hasKey(KEY_PREFIX + sha256(rawToken)));
     }
 
     private String sha256(String input) {
