@@ -8,7 +8,10 @@ import com.example.ecommerce.auth.dto.response.UserResponse;
 
 public interface AuthService {
     UserResponse register(RegisterRequest request);
+
     AuthResponse login(LoginRequest request);
+
     AuthResponse refresh(RefreshTokenRequest request);
+
     void logout(String bearerToken, RefreshTokenRequest request);
 }

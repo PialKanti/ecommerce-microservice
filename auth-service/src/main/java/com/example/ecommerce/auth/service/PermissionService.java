@@ -7,8 +7,12 @@ import org.springframework.data.domain.Pageable;
 
 public interface PermissionService {
     Page<PermissionResponse> getAll(Pageable pageable);
+
     PermissionResponse getById(Long id);
+
     PermissionResponse create(PermissionRequest request);
+
     PermissionResponse update(Long id, PermissionRequest request);
+
     void delete(Long id);
 }

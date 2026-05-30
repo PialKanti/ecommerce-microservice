@@ -13,6 +13,11 @@ public class ApiEndpoints {
     }
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
+    public static class User {
+        public static final String BASE_USERS = API_VERSION + "/users";
+    }
+
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static class Admin {
         public static final String BASE_ADMIN = API_VERSION + "/admin";
         public static final String BASE_ADMIN_ROLES = BASE_ADMIN + "/roles";

@@ -126,7 +126,7 @@ public class AuthServiceImpl implements AuthService {
 
     private AuthUserPrincipal buildPrincipal(User user) {
         List<String> roles = user.getRoles().stream()
-                .map(r -> r.getCode().name())
+                .map(r -> "ROLE_" + r.getCode().name())
                 .sorted()
                 .toList();
         List<String> permissions = user.getRoles().stream()

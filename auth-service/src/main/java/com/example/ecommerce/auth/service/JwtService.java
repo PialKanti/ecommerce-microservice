@@ -6,8 +6,12 @@ import java.time.Duration;
 
 public interface JwtService {
     String generateAccessToken(AuthUserPrincipal principal);
+
     String extractUsername(String token);
+
     boolean isTokenValid(String token);
+
     Duration getRemainingLifetime(String token);
+
     Duration getAccessTokenExpiration();
 }

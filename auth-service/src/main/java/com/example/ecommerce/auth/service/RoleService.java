@@ -10,11 +10,18 @@ import java.util.List;
 
 public interface RoleService {
     Page<RoleResponse> getAll(Pageable pageable);
+
     RoleResponse getById(Long id);
+
     RoleResponse create(RoleRequest request);
+
     RoleResponse update(Long id, RoleRequest request);
+
     void delete(Long id);
+
     List<PermissionResponse> getPermissions(Long roleId);
+
     RoleResponse assignPermission(Long roleId, Long permissionId);
+
     RoleResponse removePermission(Long roleId, Long permissionId);
 }

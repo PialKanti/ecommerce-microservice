@@ -35,6 +35,11 @@ public class GlobalExceptionHandler {
         return problemDetail(HttpStatus.CONFLICT, "Resource conflict", exception.getMessage());
     }
 
+    @ExceptionHandler(BadRequestException.class)
+    public ProblemDetail handleBadRequestException(BadRequestException exception) {
+        return problemDetail(HttpStatus.BAD_REQUEST, "Bad request", exception.getMessage());
+    }
+
     @ExceptionHandler(AuthenticationFailedException.class)
     public ProblemDetail handleAuthenticationFailed(AuthenticationFailedException exception) {
         return problemDetail(HttpStatus.UNAUTHORIZED, "Authentication failed", exception.getMessage());
