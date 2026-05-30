@@ -27,13 +27,13 @@ public class AdminUserRoleController {
 
     private final UserRoleService userRoleService;
 
-    @Operation(summary = "List user roles")
+    @Operation(summary = "List user roles", description = "Returns all roles currently assigned to a user.")
     @GetMapping("/{userId}/roles")
     public ResponseEntity<ApiResponse<List<RoleResponse>>> getUserRoles(@PathVariable Long userId) {
         return ResponseEntity.ok(ApiResponse.success(userRoleService.getRoles(userId)));
     }
 
-    @Operation(summary = "Assign role to user")
+    @Operation(summary = "Assign role to user", description = "Assigns an existing role to a user by their numeric IDs.")
     @PostMapping("/{userId}/roles/{roleId}")
     public ResponseEntity<ApiResponse<List<RoleResponse>>> assignRole(
             @PathVariable Long userId,
@@ -41,7 +41,7 @@ public class AdminUserRoleController {
         return ResponseEntity.ok(ApiResponse.success(userRoleService.assignRole(userId, roleId)));
     }
 
-    @Operation(summary = "Remove role from user")
+    @Operation(summary = "Remove role from user", description = "Removes an assigned role from a user by their numeric IDs.")
     @DeleteMapping("/{userId}/roles/{roleId}")
     public ResponseEntity<ApiResponse<List<RoleResponse>>> removeRole(
             @PathVariable Long userId,
