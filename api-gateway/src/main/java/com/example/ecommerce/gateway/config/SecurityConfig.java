@@ -23,6 +23,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -36,6 +37,8 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        PathPatternRequestMatcher.Builder path = PathPatternRequestMatcher.withDefaults();
+
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -47,40 +50,41 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
 
                         // Public auth endpoints
-                        .requestMatchers(HttpMethod.POST,
-                                ApiEndpoints.Auth.BASE_AUTH + "/login",
-                                ApiEndpoints.Auth.BASE_AUTH + "/register",
-                                ApiEndpoints.Auth.BASE_AUTH + "/refresh").permitAll()
+                        .requestMatchers(
+                                path.matcher(HttpMethod.POST, ApiEndpoints.Auth.BASE_AUTH + "/login"),
+                                path.matcher(HttpMethod.POST, ApiEndpoints.Auth.BASE_AUTH + "/register"),
+                                path.matcher(HttpMethod.POST, ApiEndpoints.Auth.BASE_AUTH + "/refresh")).permitAll()
 
                         // Swagger & actuator (open in dev)
                         .requestMatchers(
-                                "/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/actuator/health").permitAll()
+                                path.matcher("/v3/api-docs/**"),
+                                path.matcher("/swagger-ui/**"),
+                                path.matcher("/swagger-ui.html"),
+                                path.matcher("/actuator/health"),
+                                path.matcher("/error")).permitAll()
 
                         // Admin: role management
-                        .requestMatchers(HttpMethod.GET, ApiEndpoints.Admin.BASE_ADMIN_ROLES + "/**")
+                        .requestMatchers(path.matcher(HttpMethod.GET, ApiEndpoints.Admin.BASE_ADMIN_ROLES + "/**"))
                         .access(roleAndPermission(RoleCode.ADMIN, PermissionCode.PERMISSION_ROLE_READ))
-                        .requestMatchers(HttpMethod.POST, ApiEndpoints.Admin.BASE_ADMIN_ROLES)
+                        .requestMatchers(path.matcher(HttpMethod.POST, ApiEndpoints.Admin.BASE_ADMIN_ROLES))
                         .access(roleAndPermission(RoleCode.ADMIN, PermissionCode.PERMISSION_ROLE_CREATE))
-                        .requestMatchers(HttpMethod.PUT, ApiEndpoints.Admin.BASE_ADMIN_ROLES + "/**")
+                        .requestMatchers(path.matcher(HttpMethod.PUT, ApiEndpoints.Admin.BASE_ADMIN_ROLES + "/**"))
                         .access(roleAndPermission(RoleCode.ADMIN, PermissionCode.PERMISSION_ROLE_UPDATE))
-                        .requestMatchers(HttpMethod.DELETE, ApiEndpoints.Admin.BASE_ADMIN_ROLES + "/**")
+                        .requestMatchers(path.matcher(HttpMethod.DELETE, ApiEndpoints.Admin.BASE_ADMIN_ROLES + "/**"))
                         .access(roleAndPermission(RoleCode.ADMIN, PermissionCode.PERMISSION_ROLE_DELETE))
 
                         // Admin: permission management
-                        .requestMatchers(HttpMethod.GET, ApiEndpoints.Admin.BASE_ADMIN_PERMISSIONS + "/**")
+                        .requestMatchers(path.matcher(HttpMethod.GET, ApiEndpoints.Admin.BASE_ADMIN_PERMISSIONS + "/**"))
                         .access(roleAndPermission(RoleCode.ADMIN, PermissionCode.PERMISSION_READ))
-                        .requestMatchers(HttpMethod.POST, ApiEndpoints.Admin.BASE_ADMIN_PERMISSIONS)
+                        .requestMatchers(path.matcher(HttpMethod.POST, ApiEndpoints.Admin.BASE_ADMIN_PERMISSIONS))
                         .access(roleAndPermission(RoleCode.ADMIN, PermissionCode.PERMISSION_CREATE))
-                        .requestMatchers(HttpMethod.PUT, ApiEndpoints.Admin.BASE_ADMIN_PERMISSIONS + "/**")
+                        .requestMatchers(path.matcher(HttpMethod.PUT, ApiEndpoints.Admin.BASE_ADMIN_PERMISSIONS + "/**"))
                         .access(roleAndPermission(RoleCode.ADMIN, PermissionCode.PERMISSION_UPDATE))
-                        .requestMatchers(HttpMethod.DELETE, ApiEndpoints.Admin.BASE_ADMIN_PERMISSIONS + "/**")
+                        .requestMatchers(path.matcher(HttpMethod.DELETE, ApiEndpoints.Admin.BASE_ADMIN_PERMISSIONS + "/**"))
                         .access(roleAndPermission(RoleCode.ADMIN, PermissionCode.PERMISSION_DELETE))
 
                         // Admin: user-role assignment
-                        .requestMatchers(ApiEndpoints.Admin.BASE_ADMIN_USERS + "/**")
+                        .requestMatchers(path.matcher(ApiEndpoints.Admin.BASE_ADMIN_USERS + "/**"))
                         .access(roleAndPermission(RoleCode.ADMIN, PermissionCode.PERMISSION_ROLE_ASSIGN))
 
                         // All other requests require authentication
