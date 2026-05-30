@@ -83,7 +83,12 @@ public class SecurityConfig {
                         .requestMatchers(path.matcher(HttpMethod.DELETE, ApiEndpoints.Admin.BASE_ADMIN_PERMISSIONS + "/**"))
                         .access(roleAndPermission(RoleCode.ADMIN, PermissionCode.PERMISSION_DELETE))
 
-                        // Admin: user-role assignment
+                        // Admin: user management
+                        .requestMatchers(path.matcher(HttpMethod.GET,  ApiEndpoints.Admin.BASE_ADMIN_USERS + "/**"))
+                        .access(roleAndPermission(RoleCode.ADMIN, PermissionCode.PERMISSION_USER_READ))
+                        .requestMatchers(path.matcher(HttpMethod.PUT,  ApiEndpoints.Admin.BASE_ADMIN_USERS + "/**"))
+                        .access(roleAndPermission(RoleCode.ADMIN, PermissionCode.PERMISSION_USER_MANAGE))
+                        // POST /{userId}/roles/{roleId} and DELETE /{userId}/roles/{roleId}
                         .requestMatchers(path.matcher(ApiEndpoints.Admin.BASE_ADMIN_USERS + "/**"))
                         .access(roleAndPermission(RoleCode.ADMIN, PermissionCode.PERMISSION_ROLE_ASSIGN))
 

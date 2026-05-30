@@ -1000,6 +1000,237 @@
           ]
         },
         {
+          "name": "User Management",
+          "item": [
+            {
+              "name": "List Users",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const response = pm.response.json();",
+                      "const users = response.data && response.data.content ? response.data.content : [];",
+                      "const user = users[0];",
+                      "if (user && user.id) {",
+                      "    pm.collectionVariables.set('AUTH_USER_ID', user.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/users?page=0&size=10",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "users"],
+                  "query": [
+                    { "key": "page", "value": "0" },
+                    { "key": "size", "value": "10" },
+                    { "key": "search", "value": "", "disabled": true },
+                    { "key": "isActive", "value": "true", "disabled": true }
+                  ]
+                },
+                "description": "Returns a paginated list of all users. Optionally filter by search (matches username, email, firstName, lastName) and isActive status. Requires PERMISSION_USER_READ. The test script seeds AUTH_USER_ID from the first result."
+              },
+              "response": []
+            },
+            {
+              "name": "List Users - Search Filter",
+              "event": [],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/users?search=admin&isActive=true&page=0&size=10",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "users"],
+                  "query": [
+                    { "key": "search", "value": "admin" },
+                    { "key": "isActive", "value": "true" },
+                    { "key": "page", "value": "0" },
+                    { "key": "size", "value": "10" }
+                  ]
+                },
+                "description": "Lists users filtered by search term and active status. The search term is matched case-insensitively against username, email, firstName, and lastName."
+              },
+              "response": []
+            },
+            {
+              "name": "Get User By ID",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('AUTH_USER_ID')) {",
+                      "    throw new Error('Run User Management / List Users first so AUTH_USER_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/users/{{AUTH_USER_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "users", "{{AUTH_USER_ID}}"]
+                },
+                "description": "Retrieves a single user by their numeric ID. Requires PERMISSION_USER_READ."
+              },
+              "response": []
+            },
+            {
+              "name": "Deactivate User",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('AUTH_USER_ID')) {",
+                      "    throw new Error('Run User Management / List Users first so AUTH_USER_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"isActive\": false\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/users/{{AUTH_USER_ID}}/status",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "users", "{{AUTH_USER_ID}}", "status"]
+                },
+                "description": "Deactivates a user account by setting isActive to false. This operation is idempotent. Requires PERMISSION_USER_MANAGE."
+              },
+              "response": []
+            },
+            {
+              "name": "Activate User",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('AUTH_USER_ID')) {",
+                      "    throw new Error('Run User Management / List Users first so AUTH_USER_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"isActive\": true\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/users/{{AUTH_USER_ID}}/status",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "users", "{{AUTH_USER_ID}}", "status"]
+                },
+                "description": "Reactivates a previously deactivated user account. This operation is idempotent. Requires PERMISSION_USER_MANAGE."
+              },
+              "response": []
+            },
+            {
+              "name": "Get User - Not Found",
+              "event": [],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/users/{{NON_EXISTING_USER_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "users", "{{NON_EXISTING_USER_ID}}"]
+                },
+                "description": "Verifies not-found behavior when requesting a user with an unknown identifier. Expects a 404 response."
+              },
+              "response": []
+            },
+            {
+              "name": "Update User Status - Missing isActive Field",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('AUTH_USER_ID')) {",
+                      "    throw new Error('Run User Management / List Users first so AUTH_USER_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/users/{{AUTH_USER_ID}}/status",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "users", "{{AUTH_USER_ID}}", "status"]
+                },
+                "description": "Validates that the isActive field is required in the request body. Expects a 400 validation error."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
           "name": "User Role Assignment",
           "item": [
             {
