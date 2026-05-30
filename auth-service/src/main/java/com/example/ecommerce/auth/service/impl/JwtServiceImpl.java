@@ -21,9 +21,9 @@ import java.util.function.Function;
 @RequiredArgsConstructor
 public class JwtServiceImpl implements JwtService {
 
-    private static final String ROLES_CLAIM       = "roles";
+    private static final String ROLES_CLAIM = "roles";
     private static final String PERMISSIONS_CLAIM = "permissions";
-    private static final String USER_ID_CLAIM     = "userId";
+    private static final String USER_ID_CLAIM = "userId";
 
     private final JwtProperties jwtProperties;
 
