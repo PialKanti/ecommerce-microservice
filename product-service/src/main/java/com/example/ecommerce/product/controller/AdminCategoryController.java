@@ -2,6 +2,7 @@ package com.example.ecommerce.product.controller;
 
 import com.example.ecommerce.commons.constants.ApiEndpoints;
 import com.example.ecommerce.commons.dto.response.ApiResponse;
+import com.example.ecommerce.commons.dto.response.PaginatedResponse;
 import com.example.ecommerce.product.dto.request.CategoryCreateRequest;
 import com.example.ecommerce.product.dto.request.CategoryUpdateRequest;
 import com.example.ecommerce.product.dto.response.CategoryResponse;
@@ -15,9 +16,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -36,6 +39,49 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminCategoryController {
 
     private final CategoryService categoryService;
+
+    @Operation(
+            summary = "List all categories (admin)",
+            description = "Returns a paginated list of categories including both active and inactive. " +
+                    "Supports optional `search` (partial match on name or code, case-insensitive) and `isActive` filter. " +
+                    "Required permission: `CATEGORY_READ`."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Page of categories returned successfully"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Missing or invalid token", content = @Content),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Insufficient role or permission", content = @Content)
+    })
+    @GetMapping
+    public ResponseEntity<ApiResponse<PaginatedResponse<CategoryResponse>>> listCategories(
+            @Parameter(description = "Partial match on category name or code (case-insensitive)", example = "elec")
+            @RequestParam(required = false) String search,
+            @Parameter(description = "Filter by active status. Omit to return both active and inactive.", example = "true")
+            @RequestParam(required = false) Boolean isActive,
+            @Parameter(description = "Zero-based page index", example = "0")
+            @RequestParam(defaultValue = "0") Integer page,
+            @Parameter(description = "Number of records per page", example = "10")
+            @RequestParam(defaultValue = "10") Integer size) {
+        return ResponseEntity.ok(ApiResponse.success(
+                categoryService.getAllForAdmin(search, isActive, PageRequest.of(page, size))));
+    }
+
+    @Operation(
+            summary = "Get category by ID (admin)",
+            description = "Returns a single category by its numeric ID regardless of its active status. " +
+                    "Required permission: `CATEGORY_READ`."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Category found"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Missing or invalid token", content = @Content),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Insufficient role or permission", content = @Content),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "No category with the given ID", content = @Content)
+    })
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<CategoryResponse>> getById(
+            @Parameter(description = "Numeric ID of the category", example = "1", required = true)
+            @PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success(categoryService.getByIdForAdmin(id)));
+    }
 
     @Operation(
             summary = "Create a category",

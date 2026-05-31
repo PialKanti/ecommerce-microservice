@@ -9,9 +9,13 @@ import org.springframework.data.domain.Pageable;
 public interface CategoryService {
     CategoryResponse create(CategoryCreateRequest request, Long userId);
 
+    PaginatedResponse<CategoryResponse> getAll(String search, Pageable pageable);
+
+    PaginatedResponse<CategoryResponse> getAllForAdmin(String search, Boolean isActive, Pageable pageable);
+
     CategoryResponse getById(Long id);
 
-    PaginatedResponse<CategoryResponse> getAll(Pageable pageable);
+    CategoryResponse getByIdForAdmin(Long id);
 
     CategoryResponse update(Long id, CategoryUpdateRequest request, Long userId);
 

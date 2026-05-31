@@ -36,14 +36,32 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional(readOnly = true)
-    public CategoryResponse getById(Long id) {
-        return categoryMapper.toResponse(getCategoryById(id));
+    public PaginatedResponse<CategoryResponse> getAll(String search, Pageable pageable) {
+        return PaginatedResponse.of(categoryRepository.findAllWithFilters(search, true, pageable)
+                .map(categoryMapper::toResponse));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public PaginatedResponse<CategoryResponse> getAll(Pageable pageable) {
-        return PaginatedResponse.of(categoryRepository.findAll(pageable).map(categoryMapper::toResponse));
+    public PaginatedResponse<CategoryResponse> getAllForAdmin(String search, Boolean isActive, Pageable pageable) {
+        return PaginatedResponse.of(categoryRepository.findAllWithFilters(search, isActive, pageable)
+                .map(categoryMapper::toResponse));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CategoryResponse getById(Long id) {
+        Category category = getCategoryById(id);
+        if (!Boolean.TRUE.equals(category.getIsActive())) {
+            throw new EntityNotFoundException("Category not found: " + id);
+        }
+        return categoryMapper.toResponse(category);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CategoryResponse getByIdForAdmin(Long id) {
+        return categoryMapper.toResponse(getCategoryById(id));
     }
 
     @Override
