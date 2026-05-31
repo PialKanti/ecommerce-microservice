@@ -1,5 +1,6 @@
 package com.example.ecommerce.product.service.impl;
 
+import com.example.ecommerce.commons.dto.response.PaginatedResponse;
 import com.example.ecommerce.commons.exception.ResourceConflictException;
 import com.example.ecommerce.product.dto.request.ProductCreateRequest;
 import com.example.ecommerce.product.dto.request.ProductUpdateRequest;
@@ -12,7 +13,6 @@ import com.example.ecommerce.product.repository.ProductRepository;
 import com.example.ecommerce.product.service.ProductService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,13 +42,35 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional(readOnly = true)
     public ProductResponse getById(Long id) {
+        Product product = getProductById(id);
+        if (!Boolean.TRUE.equals(product.getIsActive())) {
+            throw new EntityNotFoundException("Product not found: " + id);
+        }
+        return productMapper.toResponse(product);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ProductResponse getByIdForAdmin(Long id) {
         return productMapper.toResponse(getProductById(id));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ProductResponse> getAll(Pageable pageable) {
-        return productRepository.findAll(pageable).map(productMapper::toResponse);
+    public PaginatedResponse<ProductResponse> getAll(String search, Long categoryId,
+            Double minPrice, Double maxPrice, Pageable pageable) {
+        return PaginatedResponse.of(
+                productRepository.findAllWithFilters(search, categoryId, minPrice, maxPrice, true, pageable)
+                        .map(productMapper::toResponse));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PaginatedResponse<ProductResponse> getAllForAdmin(String search, Long categoryId,
+            Double minPrice, Double maxPrice, Boolean isActive, Pageable pageable) {
+        return PaginatedResponse.of(
+                productRepository.findAllWithFilters(search, categoryId, minPrice, maxPrice, isActive, pageable)
+                        .map(productMapper::toResponse));
     }
 
     @Override

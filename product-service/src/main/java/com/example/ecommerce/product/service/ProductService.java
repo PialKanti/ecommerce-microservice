@@ -1,9 +1,9 @@
 package com.example.ecommerce.product.service;
 
+import com.example.ecommerce.commons.dto.response.PaginatedResponse;
 import com.example.ecommerce.product.dto.request.ProductCreateRequest;
 import com.example.ecommerce.product.dto.request.ProductUpdateRequest;
 import com.example.ecommerce.product.dto.response.ProductResponse;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface ProductService {
@@ -11,7 +11,13 @@ public interface ProductService {
 
     ProductResponse getById(Long id);
 
-    Page<ProductResponse> getAll(Pageable pageable);
+    ProductResponse getByIdForAdmin(Long id);
+
+    PaginatedResponse<ProductResponse> getAll(String search, Long categoryId,
+                                              Double minPrice, Double maxPrice, Pageable pageable);
+
+    PaginatedResponse<ProductResponse> getAllForAdmin(String search, Long categoryId,
+                                                      Double minPrice, Double maxPrice, Boolean isActive, Pageable pageable);
 
     ProductResponse update(Long id, ProductUpdateRequest request, Long userId);
 
