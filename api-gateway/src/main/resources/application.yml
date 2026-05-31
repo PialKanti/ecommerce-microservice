@@ -36,6 +36,26 @@ spring:
               uri: lb://AUTH-SERVICE
               predicates:
                 - Path=/api/v1/admin/users/**
+
+            - id: product-service-public-products
+              uri: lb://PRODUCT-SERVICE
+              predicates:
+                - Path=/api/v1/products/**
+
+            - id: product-service-public-categories
+              uri: lb://PRODUCT-SERVICE
+              predicates:
+                - Path=/api/v1/categories/**
+
+            - id: product-service-admin-products
+              uri: lb://PRODUCT-SERVICE
+              predicates:
+                - Path=/api/v1/admin/products/**
+
+            - id: product-service-admin-categories
+              uri: lb://PRODUCT-SERVICE
+              predicates:
+                - Path=/api/v1/admin/categories/**
   data:
     redis:
       host: ${REDIS_HOST:localhost}

@@ -25,6 +25,8 @@ import org.springframework.security.web.access.intercept.RequestAuthorizationCon
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 
+import java.util.Arrays;
+
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -63,6 +65,10 @@ public class SecurityConfig {
                                 path.matcher("/actuator/health"),
                                 path.matcher("/error")).permitAll()
 
+                        // Public product + category browsing (no auth required)
+                        .requestMatchers(path.matcher(HttpMethod.GET, ApiEndpoints.Product.BASE_PRODUCTS + "/**")).permitAll()
+                        .requestMatchers(path.matcher(HttpMethod.GET, ApiEndpoints.Category.BASE_CATEGORIES + "/**")).permitAll()
+
                         // Admin: role management
                         .requestMatchers(path.matcher(HttpMethod.GET, ApiEndpoints.Admin.BASE_ADMIN_ROLES + "/**"))
                         .access(roleAndPermission(RoleCode.ADMIN, PermissionCode.PERMISSION_ROLE_READ))
@@ -92,6 +98,26 @@ public class SecurityConfig {
                         .requestMatchers(path.matcher(ApiEndpoints.Admin.BASE_ADMIN_USERS + "/**"))
                         .access(roleAndPermission(RoleCode.ADMIN, PermissionCode.PERMISSION_ROLE_ASSIGN))
 
+                        // Admin: product management (ADMIN or PRODUCT_MANAGER + permission)
+                        .requestMatchers(path.matcher(HttpMethod.GET, ApiEndpoints.Admin.BASE_ADMIN_PRODUCTS + "/**"))
+                        .access(anyRoleAndPermission(PermissionCode.PERMISSION_PRODUCT_READ, RoleCode.ADMIN, RoleCode.PRODUCT_MANAGER))
+                        .requestMatchers(path.matcher(HttpMethod.POST, ApiEndpoints.Admin.BASE_ADMIN_PRODUCTS))
+                        .access(anyRoleAndPermission(PermissionCode.PERMISSION_PRODUCT_CREATE, RoleCode.ADMIN, RoleCode.PRODUCT_MANAGER))
+                        .requestMatchers(path.matcher(HttpMethod.PUT, ApiEndpoints.Admin.BASE_ADMIN_PRODUCTS + "/**"))
+                        .access(anyRoleAndPermission(PermissionCode.PERMISSION_PRODUCT_UPDATE, RoleCode.ADMIN, RoleCode.PRODUCT_MANAGER))
+                        .requestMatchers(path.matcher(HttpMethod.DELETE, ApiEndpoints.Admin.BASE_ADMIN_PRODUCTS + "/**"))
+                        .access(anyRoleAndPermission(PermissionCode.PERMISSION_PRODUCT_DELETE, RoleCode.ADMIN, RoleCode.PRODUCT_MANAGER))
+
+                        // Admin: category management (ADMIN or PRODUCT_MANAGER + permission)
+                        .requestMatchers(path.matcher(HttpMethod.GET, ApiEndpoints.Admin.BASE_ADMIN_CATEGORIES + "/**"))
+                        .access(anyRoleAndPermission(PermissionCode.PERMISSION_CATEGORY_READ, RoleCode.ADMIN, RoleCode.PRODUCT_MANAGER))
+                        .requestMatchers(path.matcher(HttpMethod.POST, ApiEndpoints.Admin.BASE_ADMIN_CATEGORIES))
+                        .access(anyRoleAndPermission(PermissionCode.PERMISSION_CATEGORY_CREATE, RoleCode.ADMIN, RoleCode.PRODUCT_MANAGER))
+                        .requestMatchers(path.matcher(HttpMethod.PUT, ApiEndpoints.Admin.BASE_ADMIN_CATEGORIES + "/**"))
+                        .access(anyRoleAndPermission(PermissionCode.PERMISSION_CATEGORY_UPDATE, RoleCode.ADMIN, RoleCode.PRODUCT_MANAGER))
+                        .requestMatchers(path.matcher(HttpMethod.DELETE, ApiEndpoints.Admin.BASE_ADMIN_CATEGORIES + "/**"))
+                        .access(anyRoleAndPermission(PermissionCode.PERMISSION_CATEGORY_DELETE, RoleCode.ADMIN, RoleCode.PRODUCT_MANAGER))
+
                         // All other requests require authentication
                         .anyRequest().authenticated()
                 )
@@ -118,6 +144,23 @@ public class SecurityConfig {
         FilterRegistrationBean<UserContextPropagationFilter> registration = new FilterRegistrationBean<>(filter);
         registration.setEnabled(false);
         return registration;
+    }
+
+    private AuthorizationManager<RequestAuthorizationContext> anyRoleAndPermission(
+            PermissionCode permission, RoleCode... roles) {
+        return (authSupplier, ctx) -> {
+            Authentication auth = authSupplier.get();
+            if (auth == null || !auth.isAuthenticated()
+                    || !(auth.getPrincipal() instanceof AuthenticatedUser)) {
+                return new AuthorizationDecision(false);
+            }
+            boolean hasAnyRole = Arrays.stream(roles).anyMatch(role ->
+                    auth.getAuthorities().stream()
+                            .anyMatch(a -> a.getAuthority().equals("ROLE_" + role.name())));
+            boolean hasPermission = auth.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals(permission.name()));
+            return new AuthorizationDecision(hasAnyRole && hasPermission);
+        };
     }
 
     /**

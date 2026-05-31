@@ -19,9 +19,21 @@ public class ApiEndpoints {
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static class Admin {
-        public static final String BASE_ADMIN = API_VERSION + "/admin";
-        public static final String BASE_ADMIN_ROLES = BASE_ADMIN + "/roles";
+        public static final String BASE_ADMIN             = API_VERSION + "/admin";
+        public static final String BASE_ADMIN_ROLES       = BASE_ADMIN + "/roles";
         public static final String BASE_ADMIN_PERMISSIONS = BASE_ADMIN + "/permissions";
-        public static final String BASE_ADMIN_USERS = BASE_ADMIN + "/users";
+        public static final String BASE_ADMIN_USERS       = BASE_ADMIN + "/users";
+        public static final String BASE_ADMIN_PRODUCTS    = BASE_ADMIN + "/products";
+        public static final String BASE_ADMIN_CATEGORIES  = BASE_ADMIN + "/categories";
+    }
+
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
+    public static class Product {
+        public static final String BASE_PRODUCTS = API_VERSION + "/products";
+    }
+
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
+    public static class Category {
+        public static final String BASE_CATEGORIES = API_VERSION + "/categories";
     }
 }
