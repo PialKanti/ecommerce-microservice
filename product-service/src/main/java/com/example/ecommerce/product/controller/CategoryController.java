@@ -6,6 +6,9 @@ import com.example.ecommerce.commons.dto.response.PaginatedResponse;
 import com.example.ecommerce.product.dto.response.CategoryResponse;
 import com.example.ecommerce.product.service.CategoryService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -19,21 +22,38 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(ApiEndpoints.Category.BASE_CATEGORIES)
 @RequiredArgsConstructor
-@Tag(name = "Categories", description = "Public product category browsing")
+@Tag(name = "Categories", description = "Public read-only access to product categories. No authentication required.")
 public class CategoryController {
 
     private final CategoryService categoryService;
 
-    @Operation(summary = "Get category by ID")
+    @Operation(
+            summary = "Get category by ID",
+            description = "Returns a single category by its numeric ID."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Category found"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "No category with the given ID", content = @Content)
+    })
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<CategoryResponse>> getById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<CategoryResponse>> getById(
+            @Parameter(description = "Numeric ID of the category", example = "1", required = true)
+            @PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.success(categoryService.getById(id)));
     }
 
-    @Operation(summary = "List all categories (paginated)")
+    @Operation(
+            summary = "List all categories",
+            description = "Returns a paginated list of all categories ordered by creation date descending."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Page of categories returned successfully")
+    })
     @GetMapping
     public ResponseEntity<ApiResponse<PaginatedResponse<CategoryResponse>>> listCategories(
+            @Parameter(description = "Zero-based page index", example = "0")
             @RequestParam(defaultValue = "0") Integer page,
+            @Parameter(description = "Number of records per page", example = "10")
             @RequestParam(defaultValue = "10") Integer size) {
         return ResponseEntity.ok(ApiResponse.success(
                 categoryService.getAll(PageRequest.of(page, size))));

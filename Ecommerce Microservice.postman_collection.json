@@ -1356,6 +1356,554 @@
           ]
         }
       ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "Public",
+          "item": [
+            {
+              "name": "List Categories",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const response = pm.response.json();",
+                      "const categories = response.data && response.data.content ? response.data.content : [];",
+                      "const category = categories.find(item => item.code === pm.collectionVariables.get('CATEGORY_CODE')) || categories[0];",
+                      "if (category && category.id) {",
+                      "    pm.collectionVariables.set('CATEGORY_ID', category.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/categories?page=0&size=10",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "categories"],
+                  "query": [
+                    { "key": "page", "value": "0" },
+                    { "key": "size", "value": "10" }
+                  ]
+                },
+                "description": "Lists all categories with zero-based pagination. This endpoint is public and does not require a bearer token. The test script seeds CATEGORY_ID from the first matching result."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Category By ID",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('CATEGORY_ID')) {",
+                      "    throw new Error('Run Categories / Public / List Categories or Categories / Admin / Create Category first so CATEGORY_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/categories/{{CATEGORY_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "categories", "{{CATEGORY_ID}}"]
+                },
+                "description": "Retrieves a category by numeric identifier. This endpoint is public and does not require a bearer token."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Category - Not Found",
+              "event": [],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/categories/{{NON_EXISTING_CATEGORY_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "categories", "{{NON_EXISTING_CATEGORY_ID}}"]
+                },
+                "description": "Verifies not-found behavior when requesting a category with an unknown identifier."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Admin",
+          "item": [
+            {
+              "name": "Create Category",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "pm.collectionVariables.set('CATEGORY_NAME', 'Electronics');",
+                      "pm.collectionVariables.set('CATEGORY_CODE', 'ELEC');",
+                      "pm.collectionVariables.set('CATEGORY_DESCRIPTION', 'Electronic devices and gadgets.');"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const response = pm.response.json();",
+                      "if (response.data && response.data.id) {",
+                      "    pm.collectionVariables.set('CATEGORY_ID', response.data.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"{{CATEGORY_NAME}}\",\n  \"code\": \"{{CATEGORY_CODE}}\",\n  \"description\": \"{{CATEGORY_DESCRIPTION}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/categories",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "categories"]
+                },
+                "description": "Creates a new product category. Requires ROLE_ADMIN or ROLE_PRODUCT_MANAGER with PERMISSION_CATEGORY_CREATE. The code field must be unique."
+              },
+              "response": []
+            },
+            {
+              "name": "Update Category",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('CATEGORY_ID')) {",
+                      "    throw new Error('Run Categories / Admin / Create Category first so CATEGORY_ID is available.');",
+                      "}",
+                      "pm.collectionVariables.set('UPDATED_CATEGORY_NAME', 'Consumer Electronics');",
+                      "pm.collectionVariables.set('UPDATED_CATEGORY_DESCRIPTION', 'Updated consumer electronics and gadgets category.');"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"{{UPDATED_CATEGORY_NAME}}\",\n  \"description\": \"{{UPDATED_CATEGORY_DESCRIPTION}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/categories/{{CATEGORY_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "categories", "{{CATEGORY_ID}}"]
+                },
+                "description": "Updates an existing category's name and description. The code field is immutable after creation. Requires ROLE_ADMIN or ROLE_PRODUCT_MANAGER with PERMISSION_CATEGORY_UPDATE."
+              },
+              "response": []
+            },
+            {
+              "name": "Deactivate Category",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('CATEGORY_ID')) {",
+                      "    throw new Error('Run Categories / Admin / Create Category first so CATEGORY_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/categories/{{CATEGORY_ID}}/status?isActive=false",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "categories", "{{CATEGORY_ID}}", "status"],
+                  "query": [
+                    { "key": "isActive", "value": "false" }
+                  ]
+                },
+                "description": "Deactivates a category by setting isActive to false. This operation is idempotent. Requires ROLE_ADMIN or ROLE_PRODUCT_MANAGER with PERMISSION_CATEGORY_UPDATE."
+              },
+              "response": []
+            },
+            {
+              "name": "Activate Category",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('CATEGORY_ID')) {",
+                      "    throw new Error('Run Categories / Admin / Create Category first so CATEGORY_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/categories/{{CATEGORY_ID}}/status?isActive=true",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "categories", "{{CATEGORY_ID}}", "status"],
+                  "query": [
+                    { "key": "isActive", "value": "true" }
+                  ]
+                },
+                "description": "Reactivates a previously deactivated category. This operation is idempotent. Requires ROLE_ADMIN or ROLE_PRODUCT_MANAGER with PERMISSION_CATEGORY_UPDATE."
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Category",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('CATEGORY_ID')) {",
+                      "    throw new Error('Run Categories / Admin / Create Category first so CATEGORY_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.collectionVariables.unset('CATEGORY_ID');"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/categories/{{CATEGORY_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "categories", "{{CATEGORY_ID}}"]
+                },
+                "description": "Deletes a category by identifier. Requires ROLE_ADMIN or ROLE_PRODUCT_MANAGER with PERMISSION_CATEGORY_DELETE. CATEGORY_ID is unset from collection variables on success."
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "Public",
+          "item": [
+            {
+              "name": "List Products",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const response = pm.response.json();",
+                      "const products = response.data && response.data.content ? response.data.content : [];",
+                      "const product = products[0];",
+                      "if (product && product.id) {",
+                      "    pm.collectionVariables.set('PRODUCT_ID', product.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/products?page=0&size=10",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "products"],
+                  "query": [
+                    { "key": "page", "value": "0" },
+                    { "key": "size", "value": "10" }
+                  ]
+                },
+                "description": "Lists all products with zero-based pagination. This endpoint is public and does not require a bearer token. The test script seeds PRODUCT_ID from the first result."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Product By ID",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PRODUCT_ID')) {",
+                      "    throw new Error('Run Products / Public / List Products or Products / Admin / Create Product first so PRODUCT_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/products/{{PRODUCT_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "products", "{{PRODUCT_ID}}"]
+                },
+                "description": "Retrieves a product by numeric identifier. This endpoint is public and does not require a bearer token."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Product - Not Found",
+              "event": [],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/products/{{NON_EXISTING_PRODUCT_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "products", "{{NON_EXISTING_PRODUCT_ID}}"]
+                },
+                "description": "Verifies not-found behavior when requesting a product with an unknown identifier."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Admin",
+          "item": [
+            {
+              "name": "Create Product",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('CATEGORY_ID')) {",
+                      "    throw new Error('Run Categories / Admin / Create Category first so CATEGORY_ID is available.');",
+                      "}",
+                      "const uniqueSuffix = Date.now();",
+                      "pm.collectionVariables.set('PRODUCT_SKU', `PHONE-${uniqueSuffix}`);",
+                      "pm.collectionVariables.set('PRODUCT_NAME', 'Smartphone Pro');",
+                      "pm.collectionVariables.set('PRODUCT_DESCRIPTION', 'Latest Android smartphone with 128GB storage.');",
+                      "pm.collectionVariables.set('PRODUCT_PRICE', 499.99);",
+                      "pm.collectionVariables.set('PRODUCT_IMAGE_URL', 'https://example.com/products/smartphone-pro.jpg');"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const response = pm.response.json();",
+                      "if (response.data && response.data.id) {",
+                      "    pm.collectionVariables.set('PRODUCT_ID', response.data.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"sku\": \"{{PRODUCT_SKU}}\",\n  \"name\": \"{{PRODUCT_NAME}}\",\n  \"description\": \"{{PRODUCT_DESCRIPTION}}\",\n  \"price\": {{PRODUCT_PRICE}},\n  \"isActive\": true,\n  \"categoryId\": {{CATEGORY_ID}},\n  \"imageUrl\": \"{{PRODUCT_IMAGE_URL}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/products",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "products"]
+                },
+                "description": "Creates a new product. Requires ROLE_ADMIN or ROLE_PRODUCT_MANAGER with PERMISSION_PRODUCT_CREATE. A unique SKU is generated via a timestamp suffix so the request can be run repeatedly without conflicts. Run Categories / Admin / Create Category first so CATEGORY_ID is populated."
+              },
+              "response": []
+            },
+            {
+              "name": "Update Product",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PRODUCT_ID')) {",
+                      "    throw new Error('Run Products / Admin / Create Product first so PRODUCT_ID is available.');",
+                      "}",
+                      "if (!pm.collectionVariables.get('CATEGORY_ID')) {",
+                      "    throw new Error('Run Categories / Admin / Create Category first so CATEGORY_ID is available.');",
+                      "}",
+                      "pm.collectionVariables.set('UPDATED_PRODUCT_NAME', 'Smartphone Pro Max');",
+                      "pm.collectionVariables.set('UPDATED_PRODUCT_DESCRIPTION', 'Updated premium smartphone with 256GB storage.');",
+                      "pm.collectionVariables.set('UPDATED_PRODUCT_PRICE', 599.99);"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"{{UPDATED_PRODUCT_NAME}}\",\n  \"description\": \"{{UPDATED_PRODUCT_DESCRIPTION}}\",\n  \"price\": {{UPDATED_PRODUCT_PRICE}},\n  \"isActive\": true,\n  \"categoryId\": {{CATEGORY_ID}},\n  \"imageUrl\": \"{{PRODUCT_IMAGE_URL}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/products/{{PRODUCT_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "products", "{{PRODUCT_ID}}"]
+                },
+                "description": "Updates an existing product's details. The SKU field is immutable after creation. Requires ROLE_ADMIN or ROLE_PRODUCT_MANAGER with PERMISSION_PRODUCT_UPDATE."
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Product",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PRODUCT_ID')) {",
+                      "    throw new Error('Run Products / Admin / Create Product first so PRODUCT_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.collectionVariables.unset('PRODUCT_ID');"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/products/{{PRODUCT_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "products", "{{PRODUCT_ID}}"]
+                },
+                "description": "Deletes a product by identifier. Requires ROLE_ADMIN or ROLE_PRODUCT_MANAGER with PERMISSION_PRODUCT_DELETE. PRODUCT_ID is unset from collection variables on success."
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
     }
   ],
   "event": [
@@ -1366,7 +1914,9 @@
         "exec": [
           "pm.collectionVariables.set('NON_EXISTING_ROLE_ID', pm.collectionVariables.get('NON_EXISTING_ROLE_ID') || '999999999');",
           "pm.collectionVariables.set('NON_EXISTING_PERMISSION_ID', pm.collectionVariables.get('NON_EXISTING_PERMISSION_ID') || '999999999');",
-          "pm.collectionVariables.set('NON_EXISTING_USER_ID', pm.collectionVariables.get('NON_EXISTING_USER_ID') || '999999999');"
+          "pm.collectionVariables.set('NON_EXISTING_USER_ID', pm.collectionVariables.get('NON_EXISTING_USER_ID') || '999999999');",
+          "pm.collectionVariables.set('NON_EXISTING_CATEGORY_ID', pm.collectionVariables.get('NON_EXISTING_CATEGORY_ID') || '999999999');",
+          "pm.collectionVariables.set('NON_EXISTING_PRODUCT_ID', pm.collectionVariables.get('NON_EXISTING_PRODUCT_ID') || '999999999');"
         ]
       }
     }
@@ -1498,6 +2048,74 @@
     },
     {
       "key": "NON_EXISTING_USER_ID",
+      "value": "999999999"
+    },
+    {
+      "key": "CATEGORY_ID",
+      "value": ""
+    },
+    {
+      "key": "CATEGORY_NAME",
+      "value": "Electronics"
+    },
+    {
+      "key": "CATEGORY_CODE",
+      "value": "ELEC"
+    },
+    {
+      "key": "CATEGORY_DESCRIPTION",
+      "value": "Electronic devices and gadgets."
+    },
+    {
+      "key": "UPDATED_CATEGORY_NAME",
+      "value": "Consumer Electronics"
+    },
+    {
+      "key": "UPDATED_CATEGORY_DESCRIPTION",
+      "value": "Updated consumer electronics and gadgets category."
+    },
+    {
+      "key": "NON_EXISTING_CATEGORY_ID",
+      "value": "999999999"
+    },
+    {
+      "key": "PRODUCT_ID",
+      "value": ""
+    },
+    {
+      "key": "PRODUCT_SKU",
+      "value": ""
+    },
+    {
+      "key": "PRODUCT_NAME",
+      "value": "Smartphone Pro"
+    },
+    {
+      "key": "PRODUCT_DESCRIPTION",
+      "value": "Latest Android smartphone with 128GB storage."
+    },
+    {
+      "key": "PRODUCT_PRICE",
+      "value": "499.99"
+    },
+    {
+      "key": "PRODUCT_IMAGE_URL",
+      "value": "https://example.com/products/smartphone-pro.jpg"
+    },
+    {
+      "key": "UPDATED_PRODUCT_NAME",
+      "value": "Smartphone Pro Max"
+    },
+    {
+      "key": "UPDATED_PRODUCT_DESCRIPTION",
+      "value": "Updated premium smartphone with 256GB storage."
+    },
+    {
+      "key": "UPDATED_PRODUCT_PRICE",
+      "value": "599.99"
+    },
+    {
+      "key": "NON_EXISTING_PRODUCT_ID",
       "value": "999999999"
     }
   ]

@@ -6,6 +6,9 @@ import com.example.ecommerce.commons.dto.response.PaginatedResponse;
 import com.example.ecommerce.product.dto.response.ProductResponse;
 import com.example.ecommerce.product.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -19,21 +22,38 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(ApiEndpoints.Product.BASE_PRODUCTS)
 @RequiredArgsConstructor
-@Tag(name = "Products", description = "Public product catalog browsing")
+@Tag(name = "Products", description = "Public read-only access to the product catalog. No authentication required.")
 public class ProductController {
 
     private final ProductService productService;
 
-    @Operation(summary = "Get product by ID")
+    @Operation(
+            summary = "Get product by ID",
+            description = "Returns a single product by its numeric ID."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Product found"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "No product with the given ID", content = @Content)
+    })
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<ProductResponse>> getById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<ProductResponse>> getById(
+            @Parameter(description = "Numeric ID of the product", example = "1", required = true)
+            @PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.success(productService.getById(id)));
     }
 
-    @Operation(summary = "List all products (paginated)")
+    @Operation(
+            summary = "List all products",
+            description = "Returns a paginated list of all products ordered by creation date descending."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Page of products returned successfully")
+    })
     @GetMapping
     public ResponseEntity<ApiResponse<PaginatedResponse<ProductResponse>>> listProducts(
+            @Parameter(description = "Zero-based page index", example = "0")
             @RequestParam(defaultValue = "0") Integer page,
+            @Parameter(description = "Number of records per page", example = "10")
             @RequestParam(defaultValue = "10") Integer size) {
         return ResponseEntity.ok(ApiResponse.success(
                 PaginatedResponse.of(productService.getAll(PageRequest.of(page, size)))));
