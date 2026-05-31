@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -28,7 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(ApiEndpoints.User.BASE_USERS)
 @RequiredArgsConstructor
-@Tag(name = "User Profile", description = "Authenticated user's own profile management")
+@Tag(name = "User Profile", description = "Authenticated user's own profile management. Requires a valid Bearer token.")
 @SecurityRequirement(name = "bearerAuth")
 public class UserProfileController {
 
@@ -36,11 +37,19 @@ public class UserProfileController {
 
     @Operation(
             summary = "Get current user profile",
-            description = "Returns the authenticated user's full profile. The X-User-Id header is forwarded by the API Gateway."
+            description = "Returns the authenticated user's full profile including assigned roles."
     )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",
+                    description = "Profile retrieved successfully",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = UserResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401",
+                    description = "Missing or invalid Bearer token", content = @Content)
+    })
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserResponse>> getProfile(
-            @Parameter(description = "Authenticated user's ID, forwarded by the API Gateway.", required = true)
+            @Parameter(hidden = true)
             @RequestHeader("X-User-Id") Long userId) {
         return ResponseEntity.ok(
                 ApiResponse.success("Profile retrieved successfully",
@@ -49,7 +58,7 @@ public class UserProfileController {
 
     @Operation(
             summary = "Update current user profile",
-            description = "Updates the authenticated user's editable profile fields.",
+            description = "Updates the authenticated user's editable profile fields (name and phone number).",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     required = true,
                     content = @Content(
@@ -65,9 +74,19 @@ public class UserProfileController {
                     )
             )
     )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",
+                    description = "Profile updated successfully",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = UserResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400",
+                    description = "Invalid profile payload — check field constraints", content = @Content),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401",
+                    description = "Missing or invalid Bearer token", content = @Content)
+    })
     @PutMapping("/me")
     public ResponseEntity<ApiResponse<UserResponse>> updateProfile(
-            @Parameter(description = "Authenticated user's ID, forwarded by the API Gateway.", required = true)
+            @Parameter(hidden = true)
             @RequestHeader("X-User-Id") Long userId,
             @Valid @RequestBody UpdateProfileRequest request) {
         return ResponseEntity.ok(
@@ -77,7 +96,8 @@ public class UserProfileController {
 
     @Operation(
             summary = "Change current user password",
-            description = "Changes the authenticated user's password after verifying the current password.",
+            description = "Verifies the current password then replaces it with the new one. " +
+                    "`newPassword` and `confirmPassword` must match.",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     required = true,
                     content = @Content(
@@ -93,9 +113,17 @@ public class UserProfileController {
                     )
             )
     )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204",
+                    description = "Password changed successfully", content = @Content),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400",
+                    description = "Validation error or current password is incorrect", content = @Content),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401",
+                    description = "Missing or invalid Bearer token", content = @Content)
+    })
     @PostMapping("/me/password")
     public ResponseEntity<Void> changePassword(
-            @Parameter(description = "Authenticated user's ID, forwarded by the API Gateway.", required = true)
+            @Parameter(hidden = true)
             @RequestHeader("X-User-Id") Long userId,
             @Valid @RequestBody ChangePasswordRequest request) {
         userProfileService.changePassword(userId, request);
