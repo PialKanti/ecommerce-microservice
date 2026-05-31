@@ -1,11 +1,14 @@
 package com.example.ecommerce.auth.service.impl;
 
+import com.example.ecommerce.auth.config.JwtProperties;
 import com.example.ecommerce.auth.dto.request.UpdateUserStatusRequest;
 import com.example.ecommerce.auth.dto.response.UserResponse;
 import com.example.ecommerce.auth.entity.User;
 import com.example.ecommerce.auth.mapper.UserMapper;
+import com.example.ecommerce.auth.repository.RefreshTokenRepository;
 import com.example.ecommerce.auth.repository.UserRepository;
 import com.example.ecommerce.auth.service.AdminUserService;
+import com.example.ecommerce.auth.service.TokenBlacklistService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -18,7 +21,10 @@ import org.springframework.transaction.annotation.Transactional;
 public class AdminUserServiceImpl implements AdminUserService {
 
     private final UserRepository userRepository;
-    private final UserMapper     userMapper;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final TokenBlacklistService tokenBlacklistService;
+    private final JwtProperties jwtProperties;
+    private final UserMapper userMapper;
 
     @Override
     @Transactional(readOnly = true)
@@ -42,6 +48,14 @@ public class AdminUserServiceImpl implements AdminUserService {
                 .orElseThrow(() -> new EntityNotFoundException("User not found: " + userId));
         user.setIsActive(request.isActive());
         user.setModifiedBy(adminUserId);
+
+        if (!request.isActive()) {
+            refreshTokenRepository.revokeAllActiveByUserId(userId);
+            tokenBlacklistService.blockUser(userId, jwtProperties.expiration());
+        } else {
+            tokenBlacklistService.unblockUser(userId);
+        }
+
         return userMapper.toResponse(userRepository.save(user));
     }
 }

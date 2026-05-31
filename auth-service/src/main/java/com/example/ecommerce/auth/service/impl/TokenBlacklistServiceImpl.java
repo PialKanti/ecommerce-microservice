@@ -13,7 +13,8 @@ import java.time.Duration;
 public class TokenBlacklistServiceImpl implements TokenBlacklistService {
 
     private static final String BLACKLIST_KEY_PREFIX = "auth:blacklist:";
-    private static final String BLACKLIST_VALUE      = "revoked";
+    private static final String USER_BLOCK_KEY_PREFIX = "auth:user:blocked:";
+    private static final String BLACKLIST_VALUE = "revoked";
 
     private final StringRedisTemplate stringRedisTemplate;
 
@@ -26,8 +27,16 @@ public class TokenBlacklistServiceImpl implements TokenBlacklistService {
     }
 
     @Override
-    public boolean isBlacklisted(String token) {
-        return Boolean.TRUE.equals(stringRedisTemplate.hasKey(buildKey(token)));
+    public void blockUser(Long userId, Duration ttl) {
+        if (ttl.isZero() || ttl.isNegative()) {
+            return;
+        }
+        stringRedisTemplate.opsForValue().set(USER_BLOCK_KEY_PREFIX + userId, BLACKLIST_VALUE, ttl);
+    }
+
+    @Override
+    public void unblockUser(Long userId) {
+        stringRedisTemplate.delete(USER_BLOCK_KEY_PREFIX + userId);
     }
 
     private String buildKey(String token) {

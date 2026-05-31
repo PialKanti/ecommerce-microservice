@@ -57,9 +57,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
 
+            Long userId = jwtService.extractUserId(token);
+            if (blacklistService.isUserBlocked(userId)) {
+                SecurityContextHolder.clearContext();
+                filterChain.doFilter(request, response);
+                return;
+            }
+
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
                 String username = jwtService.extractUsername(token);
-                Long userId = jwtService.extractUserId(token);
                 List<String> roles = jwtService.extractRoles(token);
                 List<String> perms = jwtService.extractPermissions(token);
 

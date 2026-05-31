@@ -5,5 +5,7 @@ import java.time.Duration;
 public interface TokenBlacklistService {
     void blacklist(String token, Duration ttl);
 
-    boolean isBlacklisted(String token);
+    void blockUser(Long userId, Duration ttl);
+
+    void unblockUser(Long userId);
 }

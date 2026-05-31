@@ -11,12 +11,21 @@ import java.security.NoSuchAlgorithmException;
 @RequiredArgsConstructor
 public class TokenBlacklistCheckService {
 
-    private static final String KEY_PREFIX = "auth:blacklist:";
+    private static final String KEY_PREFIX        = "auth:blacklist:";
+    private static final String USER_BLOCK_PREFIX = "auth:user:blocked:";
 
     private final StringRedisTemplate redisTemplate;
 
     public boolean isBlacklisted(String rawToken) {
-        return Boolean.TRUE.equals(redisTemplate.hasKey(KEY_PREFIX + sha256(rawToken)));
+        return hasKey(KEY_PREFIX + sha256(rawToken));
+    }
+
+    public boolean isUserBlocked(Long userId) {
+        return hasKey(USER_BLOCK_PREFIX + userId);
+    }
+
+    private boolean hasKey(String key) {
+        return Boolean.TRUE.equals(redisTemplate.hasKey(key));
     }
 
     private String sha256(String input) {
