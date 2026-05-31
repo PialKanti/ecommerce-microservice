@@ -19,7 +19,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -165,19 +164,4 @@ public class AdminCategoryController {
         return ResponseEntity.ok(ApiResponse.success(categoryService.toggleStatus(id, isActive, userId)));
     }
 
-    @Operation(
-            summary = "Delete a category",
-            description = "Permanently deletes a category. Required permission: `CATEGORY_DELETE`."
-    )
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "Category deleted successfully"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Category not found", content = @Content)
-    })
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCategory(
-            @Parameter(description = "Numeric ID of the category to delete", example = "1", required = true)
-            @PathVariable Long id) {
-        categoryService.delete(id);
-        return ResponseEntity.noContent().build();
-    }
 }

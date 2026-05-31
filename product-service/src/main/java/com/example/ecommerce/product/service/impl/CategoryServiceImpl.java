@@ -83,15 +83,6 @@ public class CategoryServiceImpl implements CategoryService {
         return categoryMapper.toResponse(categoryRepository.save(category));
     }
 
-    @Override
-    @Transactional
-    public void delete(Long id) {
-        if (!categoryRepository.existsById(id)) {
-            throw new EntityNotFoundException("Category not found: " + id);
-        }
-        categoryRepository.deleteById(id);
-    }
-
     private Category getCategoryById(Long id) {
         return categoryRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Category not found: " + id));

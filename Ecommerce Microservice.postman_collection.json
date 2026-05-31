@@ -1729,49 +1729,6 @@
                 "description": "Reactivates a previously deactivated category. This operation is idempotent. Requires ROLE_ADMIN or ROLE_PRODUCT_MANAGER with PERMISSION_CATEGORY_UPDATE."
               },
               "response": []
-            },
-            {
-              "name": "Delete Category",
-              "event": [
-                {
-                  "listen": "prerequest",
-                  "script": {
-                    "exec": [
-                      "if (!pm.collectionVariables.get('CATEGORY_ID')) {",
-                      "    throw new Error('Run Categories / Admin / Create Category first so CATEGORY_ID is available.');",
-                      "}"
-                    ],
-                    "type": "text/javascript",
-                    "packages": {},
-                    "requests": {}
-                  }
-                },
-                {
-                  "listen": "test",
-                  "script": {
-                    "exec": [
-                      "pm.collectionVariables.unset('CATEGORY_ID');"
-                    ],
-                    "type": "text/javascript",
-                    "packages": {},
-                    "requests": {}
-                  }
-                }
-              ],
-              "request": {
-                "method": "DELETE",
-                "header": [
-                  { "key": "Accept", "value": "application/json" },
-                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
-                ],
-                "url": {
-                  "raw": "{{BASE_URL}}/api/v1/admin/categories/{{CATEGORY_ID}}",
-                  "host": ["{{BASE_URL}}"],
-                  "path": ["api", "v1", "admin", "categories", "{{CATEGORY_ID}}"]
-                },
-                "description": "Deletes a category by identifier. Requires ROLE_ADMIN or ROLE_PRODUCT_MANAGER with PERMISSION_CATEGORY_DELETE. CATEGORY_ID is unset from collection variables on success."
-              },
-              "response": []
             }
           ]
         }
@@ -2100,7 +2057,7 @@
               "response": []
             },
             {
-              "name": "Delete Product",
+              "name": "Deactivate Product",
               "event": [
                 {
                   "listen": "prerequest",
@@ -2114,12 +2071,36 @@
                     "packages": {},
                     "requests": {}
                   }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/products/{{PRODUCT_ID}}/status?isActive=false",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "products", "{{PRODUCT_ID}}", "status"],
+                  "query": [
+                    { "key": "isActive", "value": "false" }
+                  ]
                 },
+                "description": "Deactivates a product by setting isActive to false. This operation is idempotent. Requires ROLE_ADMIN or ROLE_PRODUCT_MANAGER with PERMISSION_PRODUCT_UPDATE."
+              },
+              "response": []
+            },
+            {
+              "name": "Activate Product",
+              "event": [
                 {
-                  "listen": "test",
+                  "listen": "prerequest",
                   "script": {
                     "exec": [
-                      "pm.collectionVariables.unset('PRODUCT_ID');"
+                      "if (!pm.collectionVariables.get('PRODUCT_ID')) {",
+                      "    throw new Error('Run Products / Admin / Create Product first so PRODUCT_ID is available.');",
+                      "}"
                     ],
                     "type": "text/javascript",
                     "packages": {},
@@ -2128,17 +2109,20 @@
                 }
               ],
               "request": {
-                "method": "DELETE",
+                "method": "PUT",
                 "header": [
                   { "key": "Accept", "value": "application/json" },
                   { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
                 ],
                 "url": {
-                  "raw": "{{BASE_URL}}/api/v1/admin/products/{{PRODUCT_ID}}",
+                  "raw": "{{BASE_URL}}/api/v1/admin/products/{{PRODUCT_ID}}/status?isActive=true",
                   "host": ["{{BASE_URL}}"],
-                  "path": ["api", "v1", "admin", "products", "{{PRODUCT_ID}}"]
+                  "path": ["api", "v1", "admin", "products", "{{PRODUCT_ID}}", "status"],
+                  "query": [
+                    { "key": "isActive", "value": "true" }
+                  ]
                 },
-                "description": "Deletes a product by identifier. Requires ROLE_ADMIN or ROLE_PRODUCT_MANAGER with PERMISSION_PRODUCT_DELETE. PRODUCT_ID is unset from collection variables on success."
+                "description": "Reactivates a previously deactivated product. This operation is idempotent. Requires ROLE_ADMIN or ROLE_PRODUCT_MANAGER with PERMISSION_PRODUCT_UPDATE."
               },
               "response": []
             }

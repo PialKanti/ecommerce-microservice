@@ -19,7 +19,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -162,18 +161,20 @@ public class AdminProductController {
     }
 
     @Operation(
-            summary = "Delete a product",
-            description = "Permanently deletes a product. Required permission: `PRODUCT_DELETE`."
+            summary = "Toggle product active status",
+            description = "Activates or deactivates a product. This operation is idempotent. Required permission: `PRODUCT_UPDATE`."
     )
     @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "Product deleted successfully"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Status updated successfully"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Product not found", content = @Content)
     })
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProduct(
-            @Parameter(description = "Numeric ID of the product to delete", example = "1", required = true)
-            @PathVariable Long id) {
-        productService.delete(id);
-        return ResponseEntity.noContent().build();
+    @PutMapping("/{id}/status")
+    public ResponseEntity<ApiResponse<ProductResponse>> toggleStatus(
+            @Parameter(description = "Numeric ID of the product", example = "1", required = true)
+            @PathVariable Long id,
+            @Parameter(description = "Pass `true` to activate, `false` to deactivate", example = "false", required = true)
+            @RequestParam Boolean isActive,
+            @Parameter(hidden = true) @RequestHeader(value = "X-User-Id", required = false) Long userId) {
+        return ResponseEntity.ok(ApiResponse.success(productService.toggleStatus(id, isActive, userId)));
     }
 }

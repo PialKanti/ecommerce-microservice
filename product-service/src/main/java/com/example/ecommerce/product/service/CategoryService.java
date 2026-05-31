@@ -20,6 +20,4 @@ public interface CategoryService {
     CategoryResponse update(Long id, CategoryUpdateRequest request, Long userId);
 
     CategoryResponse toggleStatus(Long id, Boolean isActive, Long userId);
-
-    void delete(Long id);
 }

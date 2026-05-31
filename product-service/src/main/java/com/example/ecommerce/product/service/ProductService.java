@@ -21,5 +21,5 @@ public interface ProductService {
 
     ProductResponse update(Long id, ProductUpdateRequest request, Long userId);
 
-    void delete(Long id);
+    ProductResponse toggleStatus(Long id, Boolean isActive, Long userId);
 }

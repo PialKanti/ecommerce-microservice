@@ -105,8 +105,6 @@ public class SecurityConfig {
                         .access(anyRoleAndPermission(PermissionCode.PERMISSION_PRODUCT_CREATE, RoleCode.ADMIN, RoleCode.PRODUCT_MANAGER))
                         .requestMatchers(path.matcher(HttpMethod.PUT, ApiEndpoints.Admin.BASE_ADMIN_PRODUCTS + "/**"))
                         .access(anyRoleAndPermission(PermissionCode.PERMISSION_PRODUCT_UPDATE, RoleCode.ADMIN, RoleCode.PRODUCT_MANAGER))
-                        .requestMatchers(path.matcher(HttpMethod.DELETE, ApiEndpoints.Admin.BASE_ADMIN_PRODUCTS + "/**"))
-                        .access(anyRoleAndPermission(PermissionCode.PERMISSION_PRODUCT_DELETE, RoleCode.ADMIN, RoleCode.PRODUCT_MANAGER))
 
                         // Admin: category management (ADMIN or PRODUCT_MANAGER + permission)
                         .requestMatchers(path.matcher(HttpMethod.GET, ApiEndpoints.Admin.BASE_ADMIN_CATEGORIES + "/**"))
@@ -115,8 +113,6 @@ public class SecurityConfig {
                         .access(anyRoleAndPermission(PermissionCode.PERMISSION_CATEGORY_CREATE, RoleCode.ADMIN, RoleCode.PRODUCT_MANAGER))
                         .requestMatchers(path.matcher(HttpMethod.PUT, ApiEndpoints.Admin.BASE_ADMIN_CATEGORIES + "/**"))
                         .access(anyRoleAndPermission(PermissionCode.PERMISSION_CATEGORY_UPDATE, RoleCode.ADMIN, RoleCode.PRODUCT_MANAGER))
-                        .requestMatchers(path.matcher(HttpMethod.DELETE, ApiEndpoints.Admin.BASE_ADMIN_CATEGORIES + "/**"))
-                        .access(anyRoleAndPermission(PermissionCode.PERMISSION_CATEGORY_DELETE, RoleCode.ADMIN, RoleCode.PRODUCT_MANAGER))
 
                         // All other requests require authentication
                         .anyRequest().authenticated()
