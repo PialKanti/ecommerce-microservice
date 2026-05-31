@@ -1393,11 +1393,12 @@
                   "host": ["{{BASE_URL}}"],
                   "path": ["api", "v1", "categories"],
                   "query": [
+                    { "key": "search", "value": "", "disabled": true },
                     { "key": "page", "value": "0" },
                     { "key": "size", "value": "10" }
                   ]
                 },
-                "description": "Lists all categories with zero-based pagination. This endpoint is public and does not require a bearer token. The test script seeds CATEGORY_ID from the first matching result."
+                "description": "Lists all active categories with zero-based pagination. Supports optional partial-match search on name or code (case-insensitive). This endpoint is public and does not require a bearer token. The test script seeds CATEGORY_ID from the first matching result."
               },
               "response": []
             },
@@ -1454,6 +1455,121 @@
         {
           "name": "Admin",
           "item": [
+            {
+              "name": "List Categories",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const response = pm.response.json();",
+                      "const categories = response.data && response.data.content ? response.data.content : [];",
+                      "const category = categories.find(item => item.code === pm.collectionVariables.get('CATEGORY_CODE')) || categories[0];",
+                      "if (category && category.id) {",
+                      "    pm.collectionVariables.set('CATEGORY_ID', category.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/categories?page=0&size=10",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "categories"],
+                  "query": [
+                    { "key": "search", "value": "", "disabled": true },
+                    { "key": "isActive", "value": "true", "disabled": true },
+                    { "key": "page", "value": "0" },
+                    { "key": "size", "value": "10" }
+                  ]
+                },
+                "description": "Lists all categories (active and inactive) with zero-based pagination. Supports optional partial-match search on name or code (case-insensitive) and filtering by isActive status. Required permission: CATEGORY_READ. The test script seeds CATEGORY_ID from the first matching result."
+              },
+              "response": []
+            },
+            {
+              "name": "List Categories - Search Filter",
+              "event": [],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/categories?search=elec&isActive=true&page=0&size=10",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "categories"],
+                  "query": [
+                    { "key": "search", "value": "elec" },
+                    { "key": "isActive", "value": "true" },
+                    { "key": "page", "value": "0" },
+                    { "key": "size", "value": "10" }
+                  ]
+                },
+                "description": "Lists categories filtered by search term and active status. The search term is matched case-insensitively against name and code."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Category By ID",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('CATEGORY_ID')) {",
+                      "    throw new Error('Run Categories / Admin / List Categories or Create Category first so CATEGORY_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/categories/{{CATEGORY_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "categories", "{{CATEGORY_ID}}"]
+                },
+                "description": "Retrieves a single category by its numeric ID regardless of its active status. Required permission: CATEGORY_READ."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Category - Not Found",
+              "event": [],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/categories/{{NON_EXISTING_CATEGORY_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "categories", "{{NON_EXISTING_CATEGORY_ID}}"]
+                },
+                "description": "Verifies not-found behavior when requesting a category with an unknown identifier."
+              },
+              "response": []
+            },
             {
               "name": "Create Category",
               "event": [
@@ -1697,11 +1813,15 @@
                   "host": ["{{BASE_URL}}"],
                   "path": ["api", "v1", "products"],
                   "query": [
+                    { "key": "search", "value": "", "disabled": true },
+                    { "key": "categoryId", "value": "", "disabled": true },
+                    { "key": "minPrice", "value": "", "disabled": true },
+                    { "key": "maxPrice", "value": "", "disabled": true },
                     { "key": "page", "value": "0" },
                     { "key": "size", "value": "10" }
                   ]
                 },
-                "description": "Lists all products with zero-based pagination. This endpoint is public and does not require a bearer token. The test script seeds PRODUCT_ID from the first result."
+                "description": "Lists all active products with zero-based pagination. Supports optional partial-match search on name or SKU (case-insensitive) and filtering by categoryId, minPrice, and maxPrice. This endpoint is public and does not require a bearer token. The test script seeds PRODUCT_ID from the first result."
               },
               "response": []
             },
@@ -1758,6 +1878,127 @@
         {
           "name": "Admin",
           "item": [
+            {
+              "name": "List Products",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const response = pm.response.json();",
+                      "const products = response.data && response.data.content ? response.data.content : [];",
+                      "const product = products[0];",
+                      "if (product && product.id) {",
+                      "    pm.collectionVariables.set('PRODUCT_ID', product.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/products?page=0&size=10",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "products"],
+                  "query": [
+                    { "key": "search", "value": "", "disabled": true },
+                    { "key": "categoryId", "value": "", "disabled": true },
+                    { "key": "minPrice", "value": "", "disabled": true },
+                    { "key": "maxPrice", "value": "", "disabled": true },
+                    { "key": "isActive", "value": "true", "disabled": true },
+                    { "key": "page", "value": "0" },
+                    { "key": "size", "value": "10" }
+                  ]
+                },
+                "description": "Lists all products (active and inactive) with zero-based pagination. Supports optional partial-match search on name or SKU (case-insensitive) and filtering by categoryId, price range, and isActive status. Required permission: PRODUCT_READ. The test script seeds PRODUCT_ID from the first result."
+              },
+              "response": []
+            },
+            {
+              "name": "List Products - Search Filter",
+              "event": [],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/products?search=phone&isActive=true&page=0&size=10",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "products"],
+                  "query": [
+                    { "key": "search", "value": "phone" },
+                    { "key": "categoryId", "value": "", "disabled": true },
+                    { "key": "minPrice", "value": "", "disabled": true },
+                    { "key": "maxPrice", "value": "", "disabled": true },
+                    { "key": "isActive", "value": "true" },
+                    { "key": "page", "value": "0" },
+                    { "key": "size", "value": "10" }
+                  ]
+                },
+                "description": "Lists products filtered by search term and active status. The search term is matched case-insensitively against name and SKU. Enable categoryId, minPrice, or maxPrice query params as needed."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Product By ID",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PRODUCT_ID')) {",
+                      "    throw new Error('Run Products / Admin / List Products or Create Product first so PRODUCT_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/products/{{PRODUCT_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "products", "{{PRODUCT_ID}}"]
+                },
+                "description": "Retrieves a single product by its numeric ID regardless of its active status. Required permission: PRODUCT_READ."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Product - Not Found",
+              "event": [],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/products/{{NON_EXISTING_PRODUCT_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "products", "{{NON_EXISTING_PRODUCT_ID}}"]
+                },
+                "description": "Verifies not-found behavior when requesting a product with an unknown identifier."
+              },
+              "response": []
+            },
             {
               "name": "Create Product",
               "event": [
