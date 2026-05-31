@@ -10,8 +10,9 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
+import org.springframework.http.ProblemDetail;
+
 import java.io.IOException;
-import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
@@ -23,9 +24,10 @@ public class GatewayAuthenticationEntryPoint implements AuthenticationEntryPoint
     public void commence(HttpServletRequest request,
                          HttpServletResponse response,
                          AuthenticationException authException) throws IOException {
+        ProblemDetail problemDetail = ProblemDetailFactory.build(
+                HttpStatus.UNAUTHORIZED, "Unauthorized", "Authentication required", request);
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        objectMapper.writeValue(response.getWriter(),
-                Map.of("success", false, "message", "Authentication required"));
+        response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
+        objectMapper.writeValue(response.getWriter(), problemDetail);
     }
 }

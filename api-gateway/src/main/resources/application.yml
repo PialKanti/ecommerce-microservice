@@ -4,6 +4,9 @@ spring:
   threads:
     virtual:
       enabled: true
+  mvc:
+    problemdetails:
+      enabled: true
   cloud:
     gateway:
       server:
