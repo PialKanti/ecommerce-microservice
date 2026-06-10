@@ -16,8 +16,8 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
     @Query("""
             SELECT c FROM Category c
             WHERE (:search IS NULL
-                   OR lower(c.name) LIKE lower(concat('%', :search, '%'))
-                   OR lower(c.code) LIKE lower(concat('%', :search, '%')))
+                   OR lower(c.name) LIKE lower(concat('%', CAST(:search AS String), '%'))
+                   OR lower(c.code) LIKE lower(concat('%', CAST(:search AS String), '%')))
               AND (:isActive IS NULL OR c.isActive = :isActive)
             """)
     Page<Category> findAllWithFilters(
