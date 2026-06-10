@@ -25,10 +25,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("""
             select u from User u
             where (:search IS NULL
-                   OR lower(u.username)  like lower(concat('%', :search, '%'))
-                   OR lower(u.email)     like lower(concat('%', :search, '%'))
-                   OR lower(u.firstName) like lower(concat('%', :search, '%'))
-                   OR lower(u.lastName)  like lower(concat('%', :search, '%')))
+                   OR lower(u.username)  like lower(concat('%', CAST(:search AS String), '%'))
+                   OR lower(u.email)     like lower(concat('%', CAST(:search AS String), '%'))
+                   OR lower(u.firstName) like lower(concat('%', CAST(:search AS String), '%'))
+                   OR lower(u.lastName)  like lower(concat('%', CAST(:search AS String), '%')))
               AND (:isActive IS NULL OR u.isActive = :isActive)
             """)
     Page<User> findAllWithFilters(
