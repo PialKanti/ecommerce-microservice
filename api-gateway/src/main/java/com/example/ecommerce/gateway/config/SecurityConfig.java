@@ -114,6 +114,15 @@ public class SecurityConfig {
                         .requestMatchers(path.matcher(HttpMethod.PUT, ApiEndpoints.Admin.BASE_ADMIN_CATEGORIES + "/**"))
                         .access(anyRoleAndPermission(PermissionCode.PERMISSION_CATEGORY_UPDATE, RoleCode.ADMIN, RoleCode.PRODUCT_MANAGER))
 
+                        // Public inventory read (no auth required)
+                        .requestMatchers(path.matcher(HttpMethod.GET, ApiEndpoints.Inventory.BASE_INVENTORY + "/**")).permitAll()
+
+                        // Admin: inventory management (ADMIN or INVENTORY_MANAGER + permission)
+                        .requestMatchers(path.matcher(HttpMethod.GET, ApiEndpoints.Admin.BASE_ADMIN_INVENTORY + "/**"))
+                        .access(anyRoleAndPermission(PermissionCode.PERMISSION_INVENTORY_READ, RoleCode.ADMIN, RoleCode.INVENTORY_MANAGER))
+                        .requestMatchers(path.matcher(HttpMethod.POST, ApiEndpoints.Admin.BASE_ADMIN_INVENTORY + "/**"))
+                        .access(anyRoleAndPermission(PermissionCode.PERMISSION_INVENTORY_MANAGE, RoleCode.ADMIN, RoleCode.INVENTORY_MANAGER))
+
                         // All other requests require authentication
                         .anyRequest().authenticated()
                 )

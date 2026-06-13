@@ -2129,6 +2129,480 @@
           ]
         }
       ]
+    },
+    {
+      "name": "Inventory",
+      "item": [
+        {
+          "name": "Public",
+          "item": [
+            {
+              "name": "Get Inventory By Product ID",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PRODUCT_ID')) {",
+                      "    throw new Error('Run Products / Public / List Products or Products / Admin / Create Product first so PRODUCT_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/inventory/{{PRODUCT_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "inventory", "{{PRODUCT_ID}}"]
+                },
+                "description": "Retrieves current inventory levels for a product by its numeric ID. This endpoint is public and does not require a bearer token."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Inventory - Not Found",
+              "event": [],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/inventory/{{NON_EXISTING_PRODUCT_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "inventory", "{{NON_EXISTING_PRODUCT_ID}}"]
+                },
+                "description": "Verifies not-found behavior when requesting inventory for an unknown product identifier."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Admin",
+          "item": [
+            {
+              "name": "Create Inventory",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PRODUCT_ID')) {",
+                      "    throw new Error('Run Products / Admin / Create Product first so PRODUCT_ID is available.');",
+                      "}",
+                      "pm.collectionVariables.set('INVENTORY_QUANTITY', 100);"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"productId\": {{PRODUCT_ID}},\n  \"totalQuantity\": {{INVENTORY_QUANTITY}}\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/inventory",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "inventory"]
+                },
+                "description": "Creates an inventory record for a product. Requires INVENTORY_MANAGER or ADMIN role. Each product can only have one inventory record. Run Products / Admin / Create Product first so PRODUCT_ID is populated."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Inventory By Product ID",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PRODUCT_ID')) {",
+                      "    throw new Error('Run Inventory / Admin / Create Inventory first so PRODUCT_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/inventory/{{PRODUCT_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "inventory", "{{PRODUCT_ID}}"]
+                },
+                "description": "Retrieves inventory details for a product by its numeric ID. Requires INVENTORY_MANAGER or ADMIN role."
+              },
+              "response": []
+            },
+            {
+              "name": "Increase Stock",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PRODUCT_ID')) {",
+                      "    throw new Error('Run Inventory / Admin / Create Inventory first so PRODUCT_ID is available.');",
+                      "}",
+                      "pm.collectionVariables.set('INVENTORY_ADJUST_QUANTITY', 10);"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"quantity\": {{INVENTORY_ADJUST_QUANTITY}}\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/inventory/{{PRODUCT_ID}}/increase",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "inventory", "{{PRODUCT_ID}}", "increase"]
+                },
+                "description": "Increases the total stock quantity for a product. Requires INVENTORY_MANAGER or ADMIN role. Does not affect reserved quantity."
+              },
+              "response": []
+            },
+            {
+              "name": "Decrease Stock",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PRODUCT_ID')) {",
+                      "    throw new Error('Run Inventory / Admin / Create Inventory first so PRODUCT_ID is available.');",
+                      "}",
+                      "pm.collectionVariables.set('INVENTORY_ADJUST_QUANTITY', 10);"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"quantity\": {{INVENTORY_ADJUST_QUANTITY}}\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/inventory/{{PRODUCT_ID}}/decrease",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "inventory", "{{PRODUCT_ID}}", "decrease"]
+                },
+                "description": "Decreases the total stock quantity for a product. Requires INVENTORY_MANAGER or ADMIN role. Returns 409 if the resulting total would fall below the current reserved quantity."
+              },
+              "response": []
+            },
+            {
+              "name": "Reserve Stock",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PRODUCT_ID')) {",
+                      "    throw new Error('Run Inventory / Admin / Create Inventory first so PRODUCT_ID is available.');",
+                      "}",
+                      "pm.collectionVariables.set('INVENTORY_ADJUST_QUANTITY', 10);"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"quantity\": {{INVENTORY_ADJUST_QUANTITY}}\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/inventory/{{PRODUCT_ID}}/reserve",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "inventory", "{{PRODUCT_ID}}", "reserve"]
+                },
+                "description": "Reserves available stock, typically called during order creation. Requires INVENTORY_MANAGER or ADMIN role. Returns 409 if available quantity (total minus reserved) is less than the requested amount."
+              },
+              "response": []
+            },
+            {
+              "name": "Release Stock",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PRODUCT_ID')) {",
+                      "    throw new Error('Run Inventory / Admin / Create Inventory and Reserve Stock first so PRODUCT_ID is available and some stock is reserved.');",
+                      "}",
+                      "pm.collectionVariables.set('INVENTORY_ADJUST_QUANTITY', 10);"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"quantity\": {{INVENTORY_ADJUST_QUANTITY}}\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/inventory/{{PRODUCT_ID}}/release",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "inventory", "{{PRODUCT_ID}}", "release"]
+                },
+                "description": "Releases previously reserved stock, typically called on order cancellation. Requires INVENTORY_MANAGER or ADMIN role. Returns 409 if the release quantity exceeds the current reserved quantity."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Inventory - Not Found",
+              "event": [],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/inventory/{{NON_EXISTING_PRODUCT_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "inventory", "{{NON_EXISTING_PRODUCT_ID}}"]
+                },
+                "description": "Verifies not-found behavior when requesting inventory for an unknown product identifier."
+              },
+              "response": []
+            },
+            {
+              "name": "Create Inventory - Product Not Found",
+              "event": [],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"productId\": {{NON_EXISTING_PRODUCT_ID}},\n  \"totalQuantity\": 100\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/inventory",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "inventory"]
+                },
+                "description": "Verifies that creating inventory for a non-existent product returns 404. The FeignErrorDecoder translates the 404 from product-service into a not-found response."
+              },
+              "response": []
+            },
+            {
+              "name": "Create Inventory - Duplicate",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PRODUCT_ID')) {",
+                      "    throw new Error('Run Inventory / Admin / Create Inventory first so PRODUCT_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"productId\": {{PRODUCT_ID}},\n  \"totalQuantity\": 50\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/inventory",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "inventory"]
+                },
+                "description": "Verifies that creating a second inventory record for the same product returns 409 Conflict. Run Create Inventory first to establish the record."
+              },
+              "response": []
+            },
+            {
+              "name": "Reserve Stock - Insufficient Available",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PRODUCT_ID')) {",
+                      "    throw new Error('Run Inventory / Admin / Create Inventory first so PRODUCT_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"quantity\": 999999\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/inventory/{{PRODUCT_ID}}/reserve",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "inventory", "{{PRODUCT_ID}}", "reserve"]
+                },
+                "description": "Verifies that reserving more stock than is available returns 409 Conflict."
+              },
+              "response": []
+            },
+            {
+              "name": "Decrease Stock - Would Fall Below Reserved",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PRODUCT_ID')) {",
+                      "    throw new Error('Run Inventory / Admin / Create Inventory and Reserve Stock first so PRODUCT_ID is available and some stock is reserved.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"quantity\": 999999\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/inventory/{{PRODUCT_ID}}/decrease",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "inventory", "{{PRODUCT_ID}}", "decrease"]
+                },
+                "description": "Verifies that decreasing total stock to below the current reserved quantity returns 409 Conflict."
+              },
+              "response": []
+            },
+            {
+              "name": "Release Stock - Exceeds Reserved",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PRODUCT_ID')) {",
+                      "    throw new Error('Run Inventory / Admin / Create Inventory first so PRODUCT_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"quantity\": 999999\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/inventory/{{PRODUCT_ID}}/release",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "inventory", "{{PRODUCT_ID}}", "release"]
+                },
+                "description": "Verifies that releasing more stock than is currently reserved returns 409 Conflict."
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
     }
   ],
   "event": [
@@ -2342,6 +2816,14 @@
     {
       "key": "NON_EXISTING_PRODUCT_ID",
       "value": "999999999"
+    },
+    {
+      "key": "INVENTORY_QUANTITY",
+      "value": "100"
+    },
+    {
+      "key": "INVENTORY_ADJUST_QUANTITY",
+      "value": "10"
     }
   ]
 }
