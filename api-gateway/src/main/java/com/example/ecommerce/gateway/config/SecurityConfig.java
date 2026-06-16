@@ -123,6 +123,12 @@ public class SecurityConfig {
                         .requestMatchers(path.matcher(HttpMethod.POST, ApiEndpoints.Admin.BASE_ADMIN_INVENTORY + "/**"))
                         .access(anyRoleAndPermission(PermissionCode.PERMISSION_INVENTORY_MANAGE, RoleCode.ADMIN, RoleCode.INVENTORY_MANAGER))
 
+                        // Admin: order management (ADMIN or SUPPORT_AGENT + permission)
+                        .requestMatchers(path.matcher(HttpMethod.GET, ApiEndpoints.Admin.BASE_ADMIN_ORDERS + "/**"))
+                        .access(anyRoleAndPermission(PermissionCode.PERMISSION_ORDER_READ, RoleCode.ADMIN, RoleCode.SUPPORT_AGENT))
+                        .requestMatchers(path.matcher(HttpMethod.POST, ApiEndpoints.Admin.BASE_ADMIN_ORDERS + "/**"))
+                        .access(anyRoleAndPermission(PermissionCode.PERMISSION_ORDER_CANCEL, RoleCode.ADMIN, RoleCode.SUPPORT_AGENT))
+
                         // All other requests require authentication
                         .anyRequest().authenticated()
                 )
