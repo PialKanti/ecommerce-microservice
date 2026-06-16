@@ -66,6 +66,11 @@ spring:
               uri: lb://INVENTORY-SERVICE
               predicates:
                 - Path=/api/v1/admin/inventory/**
+
+            - id: cart-service
+              uri: lb://CART-SERVICE
+              predicates:
+                - Path=/api/v1/cart/**
   data:
     redis:
       host: ${REDIS_HOST:localhost}
