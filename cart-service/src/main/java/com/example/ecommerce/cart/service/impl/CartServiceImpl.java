@@ -79,10 +79,6 @@ public class CartServiceImpl implements CartService {
     private ProductClientResponse validateAndFetchProduct(Long productId, int requestedCartQuantity) {
         ProductClientResponse product = productServiceClient.getProductById(productId).getData();
 
-        if (!Boolean.TRUE.equals(product.isActive())) {
-            throw new ResourceConflictException("Inactive product cannot be added to cart: " + productId);
-        }
-
         InventoryClientResponse inventory = inventoryServiceClient.getByProductId(productId).getData();
 
         if (requestedCartQuantity > inventory.availableQuantity()) {

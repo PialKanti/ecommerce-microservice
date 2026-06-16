@@ -4,7 +4,6 @@ public record ProductClientResponse(
         Long id,
         String sku,
         String name,
-        Double price,
-        Boolean isActive
+        Double price
 ) {
 }
