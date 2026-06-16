@@ -1,6 +1,7 @@
 package com.example.ecommerce.inventory.exception;
 
 import com.example.ecommerce.commons.exception.ResourceConflictException;
+import com.example.ecommerce.commons.exception.UpstreamServiceException;
 import feign.RetryableException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;

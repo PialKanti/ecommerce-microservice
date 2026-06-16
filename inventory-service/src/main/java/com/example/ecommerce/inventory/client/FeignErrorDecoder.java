@@ -1,6 +1,6 @@
 package com.example.ecommerce.inventory.client;
 
-import com.example.ecommerce.inventory.exception.UpstreamServiceException;
+import com.example.ecommerce.commons.exception.UpstreamServiceException;
 import feign.Response;
 import feign.codec.ErrorDecoder;
 import jakarta.persistence.EntityNotFoundException;
