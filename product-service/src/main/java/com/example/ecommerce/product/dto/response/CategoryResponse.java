@@ -1,9 +1,11 @@
 package com.example.ecommerce.product.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Builder;
 
 import java.time.LocalDateTime;
 
+@Builder
 @Schema(description = "Category details returned in API responses")
 public record CategoryResponse(
 
