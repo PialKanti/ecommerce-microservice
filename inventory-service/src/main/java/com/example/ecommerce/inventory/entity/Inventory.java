@@ -6,7 +6,10 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
@@ -15,14 +18,19 @@ import java.time.LocalDateTime;
 @Table(name = "inventories")
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Inventory extends BaseEntity implements Auditable {
 
     @Column(name = "product_id", nullable = false, unique = true)
     private Long productId;
 
+    @Builder.Default
     @Column(name = "total_quantity", nullable = false)
     private Integer totalQuantity = 0;
 
+    @Builder.Default
     @Column(name = "reserved_quantity", nullable = false)
     private Integer reservedQuantity = 0;
 

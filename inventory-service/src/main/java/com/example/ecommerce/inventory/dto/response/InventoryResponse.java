@@ -1,7 +1,10 @@
 package com.example.ecommerce.inventory.dto.response;
 
+import lombok.Builder;
+
 import java.time.LocalDateTime;
 
+@Builder
 public record InventoryResponse(
         Long id,
         Long productId,

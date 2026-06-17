@@ -34,7 +34,6 @@ public class InventoryServiceImpl implements InventoryService {
         }
 
         Inventory inventory = inventoryMapper.toEntity(request);
-        inventory.setReservedQuantity(0);
         inventory.setCreatedBy(userId);
         inventory.setModifiedBy(userId);
         return inventoryMapper.toResponse(inventoryRepository.saveAndFlush(inventory));
