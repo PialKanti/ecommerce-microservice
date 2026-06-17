@@ -40,13 +40,14 @@ public class CartServiceImpl implements CartService {
         if (existingItem.isPresent()) {
             existingItem.get().setQuantity(requestedCartQuantity);
         } else {
-            CartItem item = new CartItem();
-            item.setCart(cart);
-            item.setProductId(product.id());
-            item.setProductSku(product.sku());
-            item.setProductName(product.name());
-            item.setQuantity(request.quantity());
-            item.setUnitPrice(product.price());
+            CartItem item = CartItem.builder()
+                    .cart(cart)
+                    .productId(product.id())
+                    .productSku(product.sku())
+                    .productName(product.name())
+                    .quantity(request.quantity())
+                    .unitPrice(product.price())
+                    .build();
             cart.getItems().add(item);
         }
 
@@ -89,11 +90,11 @@ public class CartServiceImpl implements CartService {
     }
 
     private Cart createCart(Long userId) {
-        Cart cart = new Cart();
-        cart.setUserId(userId);
-        cart.setCreatedBy(userId);
-        cart.setModifiedBy(userId);
-        return cart;
+        return Cart.builder()
+                .userId(userId)
+                .createdBy(userId)
+                .modifiedBy(userId)
+                .build();
     }
 
     private Optional<CartItem> findItemByProductId(Cart cart, Long productId) {

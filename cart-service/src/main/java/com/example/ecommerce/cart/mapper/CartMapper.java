@@ -18,33 +18,38 @@ public interface CartMapper {
                 .map(this::toItemResponse)
                 .toList();
 
-        return new CartResponse(
-                cart.getId(),
-                cart.getUserId(),
-                items,
-                calculateTotalQuantity(cart),
-                calculateSubtotal(cart),
-                cart.getCreatedAt(),
-                cart.getModifiedAt(),
-                cart.getCreatedBy(),
-                cart.getModifiedBy()
-        );
+        return CartResponse.builder()
+                .id(cart.getId())
+                .userId(cart.getUserId())
+                .items(items)
+                .totalQuantity(calculateTotalQuantity(cart))
+                .subtotal(calculateSubtotal(cart))
+                .createdAt(cart.getCreatedAt())
+                .modifiedAt(cart.getModifiedAt())
+                .createdBy(cart.getCreatedBy())
+                .modifiedBy(cart.getModifiedBy())
+                .build();
     }
 
     default CartResponse toEmptyResponse(Long userId) {
-        return new CartResponse(null, userId, List.of(), 0, 0.0, null, null, null, null);
+        return CartResponse.builder()
+                .userId(userId)
+                .items(List.of())
+                .totalQuantity(0)
+                .subtotal(0.0)
+                .build();
     }
 
     private CartItemResponse toItemResponse(CartItem item) {
-        return new CartItemResponse(
-                item.getId(),
-                item.getProductId(),
-                item.getProductSku(),
-                item.getProductName(),
-                item.getQuantity(),
-                item.getUnitPrice(),
-                item.getQuantity() * item.getUnitPrice()
-        );
+        return CartItemResponse.builder()
+                .id(item.getId())
+                .productId(item.getProductId())
+                .sku(item.getProductSku())
+                .productName(item.getProductName())
+                .quantity(item.getQuantity())
+                .unitPrice(item.getUnitPrice())
+                .lineTotal(item.getQuantity() * item.getUnitPrice())
+                .build();
     }
 
     private Integer calculateTotalQuantity(Cart cart) {
