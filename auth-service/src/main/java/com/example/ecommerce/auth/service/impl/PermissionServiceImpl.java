@@ -39,10 +39,11 @@ public class PermissionServiceImpl implements PermissionService {
         if (permissionRepository.existsByCode(code)) {
             throw new ResourceConflictException("Permission with code '" + code + "' already exists.");
         }
-        Permission permission = new Permission();
-        permission.setName(request.name());
-        permission.setCode(code);
-        permission.setDescription(request.description());
+        Permission permission = Permission.builder()
+                .name(request.name())
+                .code(code)
+                .description(request.description())
+                .build();
         return toResponse(permissionRepository.save(permission));
     }
 
@@ -77,9 +78,15 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     private PermissionResponse toResponse(Permission permission) {
-        return new PermissionResponse(
-                permission.getId(), permission.getName(), permission.getCode().name(),
-                permission.getDescription(), permission.getCreatedAt(), permission.getModifiedAt(),
-                permission.getCreatedBy(), permission.getModifiedBy());
+        return PermissionResponse.builder()
+                .id(permission.getId())
+                .name(permission.getName())
+                .code(permission.getCode().name())
+                .description(permission.getDescription())
+                .createdAt(permission.getCreatedAt())
+                .modifiedAt(permission.getModifiedAt())
+                .createdBy(permission.getCreatedBy())
+                .modifiedBy(permission.getModifiedBy())
+                .build();
     }
 }

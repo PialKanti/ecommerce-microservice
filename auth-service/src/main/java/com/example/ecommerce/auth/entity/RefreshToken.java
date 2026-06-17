@@ -8,7 +8,10 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
@@ -17,6 +20,9 @@ import java.time.LocalDateTime;
 @Table(name = "refresh_tokens")
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class RefreshToken extends BaseEntity implements Auditable {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -30,6 +36,7 @@ public class RefreshToken extends BaseEntity implements Auditable {
     private LocalDateTime expiresAt;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean revoked = false;
 
     @Column(name = "created_at", nullable = false, updatable = false)

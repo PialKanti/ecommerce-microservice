@@ -48,10 +48,11 @@ public class RoleServiceImpl implements RoleService {
         if (roleRepository.existsByCode(code)) {
             throw new ResourceConflictException("Role with code '" + code + "' already exists.");
         }
-        Role role = new Role();
-        role.setName(request.name());
-        role.setCode(code);
-        role.setDescription(request.description());
+        Role role = Role.builder()
+                .name(request.name())
+                .code(code)
+                .description(request.description())
+                .build();
         return toResponse(roleRepository.save(role));
     }
 
@@ -124,16 +125,29 @@ public class RoleServiceImpl implements RoleService {
                 .map(Permission::getCode)
                 .map(Enum::name)
                 .collect(Collectors.toCollection(java.util.TreeSet::new));
-        return new RoleResponse(
-                role.getId(), role.getName(), role.getCode().name(), role.getDescription(),
-                permissions, role.getCreatedAt(), role.getModifiedAt(),
-                role.getCreatedBy(), role.getModifiedBy());
+        return RoleResponse.builder()
+                .id(role.getId())
+                .name(role.getName())
+                .code(role.getCode().name())
+                .description(role.getDescription())
+                .permissions(permissions)
+                .createdAt(role.getCreatedAt())
+                .modifiedAt(role.getModifiedAt())
+                .createdBy(role.getCreatedBy())
+                .modifiedBy(role.getModifiedBy())
+                .build();
     }
 
     private PermissionResponse toPermissionResponse(Permission permission) {
-        return new PermissionResponse(
-                permission.getId(), permission.getName(), permission.getCode().name(),
-                permission.getDescription(), permission.getCreatedAt(), permission.getModifiedAt(),
-                permission.getCreatedBy(), permission.getModifiedBy());
+        return PermissionResponse.builder()
+                .id(permission.getId())
+                .name(permission.getName())
+                .code(permission.getCode().name())
+                .description(permission.getDescription())
+                .createdAt(permission.getCreatedAt())
+                .modifiedAt(permission.getModifiedAt())
+                .createdBy(permission.getCreatedBy())
+                .modifiedBy(permission.getModifiedBy())
+                .build();
     }
 }

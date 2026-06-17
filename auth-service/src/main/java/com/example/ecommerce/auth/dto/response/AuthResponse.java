@@ -1,7 +1,9 @@
 package com.example.ecommerce.auth.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Builder;
 
+@Builder
 @Schema(description = "Token pair returned after a successful login or token refresh")
 public record AuthResponse(
 

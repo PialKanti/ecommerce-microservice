@@ -11,7 +11,10 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
@@ -22,6 +25,9 @@ import java.util.Set;
 @Table(name = "roles")
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Role extends BaseEntity implements Auditable {
 
     @Column(nullable = false, length = 120)
@@ -40,6 +46,7 @@ public class Role extends BaseEntity implements Auditable {
             joinColumns = @JoinColumn(name = "role_id"),
             inverseJoinColumns = @JoinColumn(name = "permission_id")
     )
+    @Builder.Default
     private Set<Permission> permissions = new HashSet<>();
 
     @Column(name = "created_at", nullable = false, updatable = false)

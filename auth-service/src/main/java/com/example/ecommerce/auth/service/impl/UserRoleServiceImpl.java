@@ -76,9 +76,16 @@ public class UserRoleServiceImpl implements UserRoleService {
                 .map(Permission::getCode)
                 .map(Enum::name)
                 .collect(Collectors.toCollection(java.util.TreeSet::new));
-        return new RoleResponse(
-                role.getId(), role.getName(), role.getCode().name(), role.getDescription(),
-                permissions, role.getCreatedAt(), role.getModifiedAt(),
-                role.getCreatedBy(), role.getModifiedBy());
+        return RoleResponse.builder()
+                .id(role.getId())
+                .name(role.getName())
+                .code(role.getCode().name())
+                .description(role.getDescription())
+                .permissions(permissions)
+                .createdAt(role.getCreatedAt())
+                .modifiedAt(role.getModifiedAt())
+                .createdBy(role.getCreatedBy())
+                .modifiedBy(role.getModifiedBy())
+                .build();
     }
 }

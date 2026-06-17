@@ -135,7 +135,13 @@ public class AuthServiceImpl implements AuthService {
                 .distinct()
                 .sorted()
                 .toList();
-        return new AuthUserPrincipal(user.getId(), user.getUsername(), user.getPassword(), roles, permissions);
+        return AuthUserPrincipal.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .password(user.getPassword())
+                .roles(roles)
+                .permissions(permissions)
+                .build();
     }
 
     private RefreshToken getValidRefreshToken(String rawToken) {
@@ -164,17 +170,22 @@ public class AuthServiceImpl implements AuthService {
 
     private String createRefreshToken(User user) {
         String rawToken = generateSecureToken();
-        RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setUser(user);
-        refreshToken.setTokenHash(TokenHashUtil.sha256(rawToken));
-        refreshToken.setExpiresAt(LocalDateTime.now().plus(jwtProperties.refreshExpiration()));
-        refreshToken.setRevoked(Boolean.FALSE);
+        RefreshToken refreshToken = RefreshToken.builder()
+                .user(user)
+                .tokenHash(TokenHashUtil.sha256(rawToken))
+                .expiresAt(LocalDateTime.now().plus(jwtProperties.refreshExpiration()))
+                .build();
         refreshTokenRepository.save(refreshToken);
         return rawToken;
     }
 
     private AuthResponse authResponse(String accessToken, String refreshToken) {
-        return new AuthResponse(accessToken, refreshToken, TOKEN_TYPE, jwtService.getAccessTokenExpiration().toSeconds());
+        return AuthResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .tokenType(TOKEN_TYPE)
+                .expiresIn(jwtService.getAccessTokenExpiration().toSeconds())
+                .build();
     }
 
     private String generateSecureToken() {
