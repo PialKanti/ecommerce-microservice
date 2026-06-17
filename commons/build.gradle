@@ -5,4 +5,7 @@ dependencies {
     implementation 'jakarta.persistence:jakarta.persistence-api'
     implementation 'org.springframework.data:spring-data-commons'
     implementation 'com.fasterxml.jackson.core:jackson-annotations'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
 }

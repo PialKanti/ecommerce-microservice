@@ -1,16 +1,17 @@
 package com.example.ecommerce.order.service.impl;
 
+import com.example.ecommerce.commons.event.OrderCreatedEvent;
+import com.example.ecommerce.commons.event.OrderItemPayload;
 import com.example.ecommerce.commons.exception.ResourceConflictException;
 import com.example.ecommerce.order.client.CartServiceClient;
-import com.example.ecommerce.order.client.InventoryServiceClient;
 import com.example.ecommerce.order.client.dto.CartClientResponse;
 import com.example.ecommerce.order.client.dto.CartItemClientResponse;
-import com.example.ecommerce.order.client.dto.InventoryQuantityRequest;
 import com.example.ecommerce.order.dto.response.OrderResponse;
 import com.example.ecommerce.order.entity.Order;
 import com.example.ecommerce.order.entity.OrderItem;
 import com.example.ecommerce.order.entity.OrderStatus;
 import com.example.ecommerce.order.mapper.OrderMapper;
+import com.example.ecommerce.order.messaging.EventPublisher;
 import com.example.ecommerce.order.repository.OrderRepository;
 import com.example.ecommerce.order.service.OrderCancellationService;
 import com.example.ecommerce.order.service.OrderService;
@@ -20,6 +21,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -29,8 +32,8 @@ public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
     private final CartServiceClient cartServiceClient;
-    private final InventoryServiceClient inventoryServiceClient;
     private final OrderCancellationService orderCancellationService;
+    private final EventPublisher eventPublisher;
     private final OrderMapper orderMapper;
 
     @Override
@@ -38,34 +41,41 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponse placeOrder(Long userId) {
         log.info("Starting checkout for userId={}", userId);
 
-        // 1. Fetch the user's current cart
         CartClientResponse cart = cartServiceClient.getCart(userId).getData();
         validateCartHasItems(cart, userId);
 
-        // 2. Build order skeleton
         Order order = Order.builder()
                 .orderNumber(UUID.randomUUID())
                 .userId(userId)
-                .status(OrderStatus.CONFIRMED)
+                .status(OrderStatus.PENDING)
                 .totalAmount(0.0)
                 .createdBy(userId)
                 .modifiedBy(userId)
                 .build();
 
-        // 3. Reserve inventory and build item snapshots — SAGA Step 1 seam
-        cart.items().forEach(cartItem -> {
-            reserveInventory(cartItem.productId(), cartItem.quantity());
-            order.getItems().add(toOrderItem(order, cartItem));
-        });
-
-        // 4. Calculate total and persist — SAGA Step 2 seam
+        cart.items().forEach(cartItem -> order.getItems().add(toOrderItem(order, cartItem)));
         order.setTotalAmount(calculateTotalAmount(order));
         Order saved = orderRepository.saveAndFlush(order);
 
-        // 5. Clear the cart — SAGA Step 3 seam
-        cartServiceClient.clearCart(userId);
+        List<OrderItemPayload> payloads = saved.getItems().stream()
+                .map(item -> OrderItemPayload.builder()
+                        .productId(item.getProductId())
+                        .productName(item.getProductName())
+                        .quantity(item.getQuantity())
+                        .unitPrice(item.getUnitPrice())
+                        .build())
+                .toList();
 
-        log.info("Checkout completed for userId={}, orderId={}", userId, saved.getId());
+        eventPublisher.publishOrderCreated(OrderCreatedEvent.builder()
+                .eventId(UUID.randomUUID())
+                .occurredAt(Instant.now())
+                .orderId(saved.getId())
+                .orderNumber(saved.getOrderNumber())
+                .userId(userId)
+                .items(payloads)
+                .build());
+
+        log.info("Order PENDING, SAGA started: userId={}, orderId={}", userId, saved.getId());
         return orderMapper.toResponse(saved);
     }
 
@@ -76,11 +86,10 @@ public class OrderServiceImpl implements OrderService {
 
         Order order = findOrder(orderId);
         validateOrderOwnership(order, userId);
-        orderCancellationService.cancelConfirmedOrder(order, userId);
+        orderCancellationService.cancelAndPublish(order, "Cancelled by user", userId);
 
-        Order saved = orderRepository.saveAndFlush(order);
         log.info("Order cancellation completed for userId={}, orderId={}", userId, orderId);
-        return orderMapper.toResponse(saved);
+        return orderMapper.toResponse(order);
     }
 
     @Override
@@ -103,11 +112,10 @@ public class OrderServiceImpl implements OrderService {
         log.info("Starting administrative order cancellation for actorUserId={}, orderId={}", actorUserId, orderId);
 
         Order order = findOrder(orderId);
-        orderCancellationService.cancelConfirmedOrder(order, actorUserId);
+        orderCancellationService.cancelAndPublish(order, "Cancelled by administrator", actorUserId);
 
-        Order saved = orderRepository.saveAndFlush(order);
         log.info("Administrative order cancellation completed for actorUserId={}, orderId={}", actorUserId, orderId);
-        return orderMapper.toResponse(saved);
+        return orderMapper.toResponse(order);
     }
 
     private Order findOrder(Long orderId) {
@@ -127,10 +135,6 @@ public class OrderServiceImpl implements OrderService {
             log.warn("Order ownership validation failed for userId={}, orderId={}", userId, order.getId());
             throw new ResourceConflictException("Order does not belong to current user: " + order.getId());
         }
-    }
-
-    private void reserveInventory(Long productId, Integer quantity) {
-        inventoryServiceClient.reserve(productId, new InventoryQuantityRequest(quantity));
     }
 
     private OrderItem toOrderItem(Order order, CartItemClientResponse cartItem) {

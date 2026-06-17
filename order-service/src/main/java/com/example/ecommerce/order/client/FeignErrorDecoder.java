@@ -23,24 +23,18 @@ public class FeignErrorDecoder implements ErrorDecoder {
     }
 
     private String resolveUpstream(String methodKey) {
-        if (methodKey.contains("CartServiceClient"))      return "Cart Service";
-        if (methodKey.contains("InventoryServiceClient")) return "Inventory Service";
+        if (methodKey.contains("CartServiceClient")) return "Cart Service";
         return "Upstream Service";
     }
 
     private String notFoundMessage(String method) {
         return switch (method) {
-            case "getCart"  -> "Cart not found for user";
-            case "reserve", "release" -> "Inventory not found for product";
+            case "getCart" -> "Cart not found for user";
             default -> "Resource not found on upstream service";
         };
     }
 
     private String conflictMessage(String method) {
-        return switch (method) {
-            case "reserve" -> "Insufficient available inventory for one or more products";
-            case "release" -> "Cannot release more inventory than currently reserved";
-            default -> "Resource conflict on upstream service";
-        };
+        return "Resource conflict on upstream service";
     }
 }

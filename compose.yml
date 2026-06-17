@@ -23,6 +23,20 @@ services:
     networks:
       - backend_net
 
+  rabbitmq:
+    container_name: ecommerce_rabbitmq
+    image: rabbitmq:3.13-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin@123
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - backend_net
+
 networks:
   backend_net:
     driver: bridge
@@ -30,3 +44,4 @@ networks:
 volumes:
   postgres_data:
   redis_data:
+  rabbitmq_data:
