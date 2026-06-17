@@ -43,13 +43,14 @@ public class OrderServiceImpl implements OrderService {
         validateCartHasItems(cart, userId);
 
         // 2. Build order skeleton
-        Order order = new Order();
-        order.setOrderNumber(UUID.randomUUID());
-        order.setUserId(userId);
-        order.setStatus(OrderStatus.CONFIRMED);
-        order.setTotalAmount(0.0);
-        order.setCreatedBy(userId);
-        order.setModifiedBy(userId);
+        Order order = Order.builder()
+                .orderNumber(UUID.randomUUID())
+                .userId(userId)
+                .status(OrderStatus.CONFIRMED)
+                .totalAmount(0.0)
+                .createdBy(userId)
+                .modifiedBy(userId)
+                .build();
 
         // 3. Reserve inventory and build item snapshots — SAGA Step 1 seam
         cart.items().forEach(cartItem -> {
@@ -133,14 +134,14 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private OrderItem toOrderItem(Order order, CartItemClientResponse cartItem) {
-        OrderItem item = new OrderItem();
-        item.setOrder(order);
-        item.setProductId(cartItem.productId());
-        item.setProductName(cartItem.productName());
-        item.setUnitPrice(cartItem.unitPrice());
-        item.setQuantity(cartItem.quantity());
-        item.setTotalPrice(cartItem.unitPrice() * cartItem.quantity());
-        return item;
+        return OrderItem.builder()
+                .order(order)
+                .productId(cartItem.productId())
+                .productName(cartItem.productName())
+                .unitPrice(cartItem.unitPrice())
+                .quantity(cartItem.quantity())
+                .totalPrice(cartItem.unitPrice() * cartItem.quantity())
+                .build();
     }
 
     private Double calculateTotalAmount(Order order) {

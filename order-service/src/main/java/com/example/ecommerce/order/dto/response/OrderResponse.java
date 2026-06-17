@@ -1,11 +1,13 @@
 package com.example.ecommerce.order.dto.response;
 
 import com.example.ecommerce.order.entity.OrderStatus;
+import lombok.Builder;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+@Builder
 public record OrderResponse(
         Long id,
         UUID orderNumber,

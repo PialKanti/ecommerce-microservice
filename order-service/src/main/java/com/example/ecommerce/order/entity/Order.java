@@ -11,7 +11,10 @@ import jakarta.persistence.NamedAttributeNode;
 import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
@@ -23,6 +26,9 @@ import java.util.UUID;
 @Table(name = "orders")
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @NamedEntityGraph(name = "Order.withItems", attributeNodes = @NamedAttributeNode("items"))
 public class Order extends BaseEntity implements Auditable {
 
@@ -42,6 +48,7 @@ public class Order extends BaseEntity implements Auditable {
     @Column(name = "cancelled_at")
     private LocalDateTime cancelledAt;
 
+    @Builder.Default
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();
 

@@ -1,5 +1,8 @@
 package com.example.ecommerce.order.dto.response;
 
+import lombok.Builder;
+
+@Builder
 public record OrderItemResponse(
         Long id,
         Long productId,

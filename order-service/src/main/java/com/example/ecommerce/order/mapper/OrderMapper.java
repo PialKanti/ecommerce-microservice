@@ -18,29 +18,29 @@ public interface OrderMapper {
                 .map(this::toItemResponse)
                 .toList();
 
-        return new OrderResponse(
-                order.getId(),
-                order.getOrderNumber(),
-                order.getUserId(),
-                order.getStatus(),
-                order.getTotalAmount(),
-                order.getCancelledAt(),
-                items,
-                order.getCreatedAt(),
-                order.getModifiedAt(),
-                order.getCreatedBy(),
-                order.getModifiedBy()
-        );
+        return OrderResponse.builder()
+                .id(order.getId())
+                .orderNumber(order.getOrderNumber())
+                .userId(order.getUserId())
+                .status(order.getStatus())
+                .totalAmount(order.getTotalAmount())
+                .cancelledAt(order.getCancelledAt())
+                .items(items)
+                .createdAt(order.getCreatedAt())
+                .modifiedAt(order.getModifiedAt())
+                .createdBy(order.getCreatedBy())
+                .modifiedBy(order.getModifiedBy())
+                .build();
     }
 
     private OrderItemResponse toItemResponse(OrderItem item) {
-        return new OrderItemResponse(
-                item.getId(),
-                item.getProductId(),
-                item.getProductName(),
-                item.getUnitPrice(),
-                item.getQuantity(),
-                item.getTotalPrice()
-        );
+        return OrderItemResponse.builder()
+                .id(item.getId())
+                .productId(item.getProductId())
+                .productName(item.getProductName())
+                .unitPrice(item.getUnitPrice())
+                .quantity(item.getQuantity())
+                .totalPrice(item.getTotalPrice())
+                .build();
     }
 }
