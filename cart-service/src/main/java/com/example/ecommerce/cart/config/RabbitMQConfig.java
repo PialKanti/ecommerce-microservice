@@ -25,6 +25,7 @@ public class RabbitMQConfig {
 
     public static final String RK_CART_CLEAR_FAILED = "cart.clear.failed";
 
+    // Queue names follow the pattern: <consuming-service>.<routing-key>
     public static final String Q_ORDER_CONFIRMED = "cart.order.confirmed";
 
     @Bean
