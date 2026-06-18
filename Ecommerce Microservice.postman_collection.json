@@ -2603,6 +2603,479 @@
           ]
         }
       ]
+    },
+    {
+      "name": "Cart",
+      "item": [
+        {
+          "name": "Happy Path",
+          "item": [
+            {
+              "name": "Add Item to Cart",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PRODUCT_ID')) {",
+                      "    throw new Error('Run Products / Public / List Products or Products / Admin / Create Product first so PRODUCT_ID is available.');",
+                      "}",
+                      "pm.collectionVariables.set('CART_ITEM_QUANTITY', 2);"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"productId\": {{PRODUCT_ID}},\n  \"quantity\": {{CART_ITEM_QUANTITY}}\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/cart/items",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "cart", "items"]
+                },
+                "description": "Adds an active product to the current user's cart. Validates that the product exists and that available inventory is sufficient for the total requested quantity. Adding a product already in the cart merges quantities rather than creating a duplicate line. Requires a valid bearer token."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Cart",
+              "event": [],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/cart",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "cart"]
+                },
+                "description": "Retrieves the current user's cart including all line items, total quantity, and subtotal. Returns an empty cart response (id=null, items=[], totalQuantity=0, subtotal=0.0) rather than 404 when no cart exists yet."
+              },
+              "response": []
+            },
+            {
+              "name": "Clear Cart",
+              "event": [],
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/cart",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "cart"]
+                },
+                "description": "Removes all items from the current user's cart. Returns 204 No Content. Idempotent — a no-op if no cart exists."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Validation And Error Scenarios",
+          "item": [
+            {
+              "name": "Get Cart - Unauthorized",
+              "event": [],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/cart",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "cart"]
+                },
+                "description": "Verifies that the cart endpoint returns 401 when no bearer token is supplied."
+              },
+              "response": []
+            },
+            {
+              "name": "Add Item - Product Not Found",
+              "event": [],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"productId\": {{NON_EXISTING_PRODUCT_ID}},\n  \"quantity\": 1\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/cart/items",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "cart", "items"]
+                },
+                "description": "Verifies that adding a non-existent product to the cart returns 404. The FeignErrorDecoder in cart-service translates the 404 response from product-service."
+              },
+              "response": []
+            },
+            {
+              "name": "Add Item - Insufficient Stock",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PRODUCT_ID')) {",
+                      "    throw new Error('Run Products / Public / List Products or Products / Admin / Create Product first so PRODUCT_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"productId\": {{PRODUCT_ID}},\n  \"quantity\": 999999\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/cart/items",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "cart", "items"]
+                },
+                "description": "Verifies that requesting more stock than is available returns 409 Conflict. cart-service checks available inventory via Feign before adding the item."
+              },
+              "response": []
+            },
+            {
+              "name": "Add Item - Missing Product ID",
+              "event": [],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"quantity\": 1\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/cart/items",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "cart", "items"]
+                },
+                "description": "Validates that productId is required when adding items to cart. Expects a 400 validation error."
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "User",
+          "item": [
+            {
+              "name": "Checkout",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const response = pm.response.json();",
+                      "if (response.data && response.data.id) {",
+                      "    pm.collectionVariables.set('ORDER_ID', response.data.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/orders/checkout",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "orders", "checkout"]
+                },
+                "description": "Converts the current user's cart into a PENDING order and publishes an OrderCreatedEvent to trigger inventory reservation via the SAGA. The response returns immediately in PENDING status — poll GET /api/v1/orders/{id} to observe the transition to CONFIRMED (or CANCELLED if reservation fails). Run Cart / Happy Path / Add Item to Cart first so the cart is populated."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Order By ID",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('ORDER_ID')) {",
+                      "    throw new Error('Run Orders / User / Checkout first so ORDER_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/orders/{{ORDER_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "orders", "{{ORDER_ID}}"]
+                },
+                "description": "Retrieves an order owned by the current user. Returns 403 if the order belongs to a different user. Use this endpoint to poll for the PENDING → CONFIRMED transition after checkout."
+              },
+              "response": []
+            },
+            {
+              "name": "Cancel Order",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('ORDER_ID')) {",
+                      "    throw new Error('Run Orders / User / Checkout first so ORDER_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/orders/{{ORDER_ID}}/cancel",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "orders", "{{ORDER_ID}}", "cancel"]
+                },
+                "description": "Cancels a PENDING or CONFIRMED order owned by the current user and publishes OrderCancelledEvent to trigger inventory release via the SAGA. Returns 409 if the order is already CANCELLED or in a non-cancellable state."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Admin",
+          "item": [
+            {
+              "name": "Get Order By ID",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('ORDER_ID')) {",
+                      "    throw new Error('Run Orders / User / Checkout first so ORDER_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/orders/{{ORDER_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "orders", "{{ORDER_ID}}"]
+                },
+                "description": "Retrieves any order regardless of owner. Requires ADMIN or SUPPORT_AGENT role with PERMISSION_ORDER_READ."
+              },
+              "response": []
+            },
+            {
+              "name": "Cancel Order",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('ORDER_ID')) {",
+                      "    throw new Error('Run Orders / User / Checkout first so ORDER_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/orders/{{ORDER_ID}}/cancel",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "orders", "{{ORDER_ID}}", "cancel"]
+                },
+                "description": "Cancels any PENDING or CONFIRMED order and publishes OrderCancelledEvent to trigger inventory release. Requires ADMIN or SUPPORT_AGENT role with PERMISSION_ORDER_CANCEL."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Order - Not Found",
+              "event": [],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/orders/{{NON_EXISTING_ORDER_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "orders", "{{NON_EXISTING_ORDER_ID}}"]
+                },
+                "description": "Verifies not-found behavior when requesting an order with an unknown identifier."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Validation And Error Scenarios",
+          "item": [
+            {
+              "name": "Checkout - Empty Cart",
+              "event": [],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/orders/checkout",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "orders", "checkout"]
+                },
+                "description": "Verifies that checkout with an empty or non-existent cart returns 409 Conflict. Run Cart / Happy Path / Clear Cart first to ensure the cart is empty."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Order - Not Found",
+              "event": [],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/orders/{{NON_EXISTING_ORDER_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "orders", "{{NON_EXISTING_ORDER_ID}}"]
+                },
+                "description": "Verifies not-found behavior when requesting an order with an unknown identifier."
+              },
+              "response": []
+            },
+            {
+              "name": "Cancel Order - Already Cancelled",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('ORDER_ID')) {",
+                      "    throw new Error('Run Orders / User / Checkout and Cancel Order first so ORDER_ID is available and the order is already cancelled.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/orders/{{ORDER_ID}}/cancel",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "orders", "{{ORDER_ID}}", "cancel"]
+                },
+                "description": "Verifies that cancelling an already-cancelled order returns 409 Conflict. Run Orders / User / Cancel Order first to put the order into CANCELLED state."
+              },
+              "response": []
+            },
+            {
+              "name": "Checkout - Unauthorized",
+              "event": [],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/orders/checkout",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "orders", "checkout"]
+                },
+                "description": "Verifies that the checkout endpoint returns 401 when no bearer token is supplied."
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
     }
   ],
   "event": [
@@ -2615,7 +3088,8 @@
           "pm.collectionVariables.set('NON_EXISTING_PERMISSION_ID', pm.collectionVariables.get('NON_EXISTING_PERMISSION_ID') || '999999999');",
           "pm.collectionVariables.set('NON_EXISTING_USER_ID', pm.collectionVariables.get('NON_EXISTING_USER_ID') || '999999999');",
           "pm.collectionVariables.set('NON_EXISTING_CATEGORY_ID', pm.collectionVariables.get('NON_EXISTING_CATEGORY_ID') || '999999999');",
-          "pm.collectionVariables.set('NON_EXISTING_PRODUCT_ID', pm.collectionVariables.get('NON_EXISTING_PRODUCT_ID') || '999999999');"
+          "pm.collectionVariables.set('NON_EXISTING_PRODUCT_ID', pm.collectionVariables.get('NON_EXISTING_PRODUCT_ID') || '999999999');",
+          "pm.collectionVariables.set('NON_EXISTING_ORDER_ID', pm.collectionVariables.get('NON_EXISTING_ORDER_ID') || '999999999');"
         ]
       }
     }
@@ -2824,6 +3298,18 @@
     {
       "key": "INVENTORY_ADJUST_QUANTITY",
       "value": "10"
+    },
+    {
+      "key": "CART_ITEM_QUANTITY",
+      "value": "2"
+    },
+    {
+      "key": "ORDER_ID",
+      "value": ""
+    },
+    {
+      "key": "NON_EXISTING_ORDER_ID",
+      "value": "999999999"
     }
   ]
 }
