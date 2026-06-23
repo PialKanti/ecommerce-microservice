@@ -23,13 +23,15 @@ public class FeignErrorDecoder implements ErrorDecoder {
     }
 
     private String resolveUpstream(String methodKey) {
-        if (methodKey.contains("CartServiceClient")) return "Cart Service";
+        if (methodKey.contains("CartServiceClient"))    return "Cart Service";
+        if (methodKey.contains("PaymentServiceClient")) return "Payment Service";
         return "Upstream Service";
     }
 
     private String notFoundMessage(String method) {
         return switch (method) {
-            case "getCart" -> "Cart not found for user";
+            case "getCart"              -> "Cart not found for user";
+            case "createPaymentSession" -> "Payment not found";
             default -> "Resource not found on upstream service";
         };
     }

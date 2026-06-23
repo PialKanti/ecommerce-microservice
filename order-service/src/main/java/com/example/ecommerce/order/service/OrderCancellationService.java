@@ -27,9 +27,11 @@ public class OrderCancellationService {
 
     @Transactional
     public void cancelAndPublish(Order order, String reason, Long modifiedBy) {
-        if (order.getStatus() != OrderStatus.PENDING && order.getStatus() != OrderStatus.CONFIRMED) {
+        if (order.getStatus() != OrderStatus.PENDING
+                && order.getStatus() != OrderStatus.CONFIRMED
+                && order.getStatus() != OrderStatus.AWAITING_PAYMENT) {
             log.warn("Order cancellation rejected for orderId={} because status={}", order.getId(), order.getStatus());
-            throw new ResourceConflictException("Only PENDING or CONFIRMED orders can be cancelled.");
+            throw new ResourceConflictException("Only PENDING, CONFIRMED, or AWAITING_PAYMENT orders can be cancelled.");
         }
 
         order.setStatus(OrderStatus.CANCELLED);

@@ -15,6 +15,7 @@ public record OrderResponse(
         OrderStatus status,
         Double totalAmount,
         LocalDateTime cancelledAt,
+        String paymentLink,
         List<OrderItemResponse> items,
         LocalDateTime createdAt,
         LocalDateTime modifiedAt,

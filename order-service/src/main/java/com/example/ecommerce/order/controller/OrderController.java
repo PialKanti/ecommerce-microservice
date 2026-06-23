@@ -2,6 +2,7 @@ package com.example.ecommerce.order.controller;
 
 import com.example.ecommerce.commons.constants.ApiEndpoints;
 import com.example.ecommerce.commons.dto.response.ApiResponse;
+import com.example.ecommerce.order.dto.response.CheckoutResponse;
 import com.example.ecommerce.order.dto.response.OrderResponse;
 import com.example.ecommerce.order.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,7 +30,7 @@ public class OrderController {
     @Operation(summary = "Checkout cart",
             description = "Converts the current user's cart into a confirmed order and reserves inventory.")
     @PostMapping("/checkout")
-    public ResponseEntity<ApiResponse<OrderResponse>> checkout(
+    public ResponseEntity<ApiResponse<CheckoutResponse>> checkout(
             @Parameter(hidden = true) @RequestHeader("X-User-Id") Long userId) {
         return ResponseEntity.ok(ApiResponse.success("Order placed successfully.",
                 orderService.placeOrder(userId)));

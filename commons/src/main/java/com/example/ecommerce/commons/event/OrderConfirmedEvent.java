@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -19,4 +20,6 @@ public class OrderConfirmedEvent {
     private Long orderId;
     private UUID orderNumber;
     private Long userId;
+    private Double totalAmount;
+    private List<OrderItemPayload> items;
 }

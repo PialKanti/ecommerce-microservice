@@ -114,6 +114,9 @@ public class SecurityConfig {
                         .requestMatchers(path.matcher(HttpMethod.PUT, ApiEndpoints.Admin.BASE_ADMIN_CATEGORIES + "/**"))
                         .access(anyRoleAndPermission(PermissionCode.PERMISSION_CATEGORY_UPDATE, RoleCode.ADMIN, RoleCode.PRODUCT_MANAGER))
 
+                        // Payment webhook redirects — permitAll (Stripe browser redirects; no JWT present)
+                        .requestMatchers(path.matcher(HttpMethod.GET, ApiEndpoints.Payment.BASE_PAYMENT_WEBHOOK + "/**")).permitAll()
+
                         // Public inventory read (no auth required)
                         .requestMatchers(path.matcher(HttpMethod.GET, ApiEndpoints.Inventory.BASE_INVENTORY + "/**")).permitAll()
 
@@ -128,6 +131,12 @@ public class SecurityConfig {
                         .access(anyRoleAndPermission(PermissionCode.PERMISSION_ORDER_READ, RoleCode.ADMIN, RoleCode.SUPPORT_AGENT))
                         .requestMatchers(path.matcher(HttpMethod.POST, ApiEndpoints.Admin.BASE_ADMIN_ORDERS + "/**"))
                         .access(anyRoleAndPermission(PermissionCode.PERMISSION_ORDER_CANCEL, RoleCode.ADMIN, RoleCode.SUPPORT_AGENT))
+
+                        // Admin: payment management (ADMIN or SUPPORT_AGENT + permission)
+                        .requestMatchers(path.matcher(HttpMethod.GET, ApiEndpoints.Admin.BASE_ADMIN_PAYMENTS + "/**"))
+                        .access(anyRoleAndPermission(PermissionCode.PERMISSION_PAYMENT_READ, RoleCode.ADMIN, RoleCode.SUPPORT_AGENT))
+                        .requestMatchers(path.matcher(HttpMethod.POST, ApiEndpoints.Admin.BASE_ADMIN_PAYMENTS + "/**"))
+                        .access(anyRoleAndPermission(PermissionCode.PERMISSION_PAYMENT_MANAGE, RoleCode.ADMIN, RoleCode.SUPPORT_AGENT))
 
                         // All other requests require authentication
                         .anyRequest().authenticated()

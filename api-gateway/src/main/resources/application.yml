@@ -81,6 +81,21 @@ spring:
               uri: lb://ORDER-SERVICE
               predicates:
                 - Path=/api/v1/admin/orders/**
+
+            - id: payment-service-webhook
+              uri: lb://PAYMENT-SERVICE
+              predicates:
+                - Path=/api/v1/payments/webhook/**
+
+            - id: payment-service-customer
+              uri: lb://PAYMENT-SERVICE
+              predicates:
+                - Path=/api/v1/payments/**
+
+            - id: payment-service-admin
+              uri: lb://PAYMENT-SERVICE
+              predicates:
+                - Path=/api/v1/admin/payments/**
   data:
     redis:
       host: ${REDIS_HOST:localhost}

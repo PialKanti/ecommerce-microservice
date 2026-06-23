@@ -27,6 +27,7 @@ public class ApiEndpoints {
         public static final String BASE_ADMIN_CATEGORIES  = BASE_ADMIN + "/categories";
         public static final String BASE_ADMIN_INVENTORY   = BASE_ADMIN + "/inventory";
         public static final String BASE_ADMIN_ORDERS      = BASE_ADMIN + "/orders";
+        public static final String BASE_ADMIN_PAYMENTS    = BASE_ADMIN + "/payments";
     }
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -52,5 +53,11 @@ public class ApiEndpoints {
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static class Order {
         public static final String BASE_ORDERS = API_VERSION + "/orders";
+    }
+
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
+    public static class Payment {
+        public static final String BASE_PAYMENTS        = API_VERSION + "/payments";
+        public static final String BASE_PAYMENT_WEBHOOK = BASE_PAYMENTS + "/webhook";
     }
 }

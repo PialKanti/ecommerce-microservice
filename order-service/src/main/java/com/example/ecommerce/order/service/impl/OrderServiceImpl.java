@@ -4,9 +4,13 @@ import com.example.ecommerce.commons.event.OrderCreatedEvent;
 import com.example.ecommerce.commons.event.OrderItemPayload;
 import com.example.ecommerce.commons.exception.ResourceConflictException;
 import com.example.ecommerce.order.client.CartServiceClient;
+import com.example.ecommerce.order.client.PaymentServiceClient;
 import com.example.ecommerce.order.client.dto.CartClientResponse;
 import com.example.ecommerce.order.client.dto.CartItemClientResponse;
+import com.example.ecommerce.order.client.dto.InitiatePaymentRequest;
+import com.example.ecommerce.order.dto.response.CheckoutResponse;
 import com.example.ecommerce.order.dto.response.OrderResponse;
+import com.example.ecommerce.order.dto.response.PaymentClientResponse;
 import com.example.ecommerce.order.entity.Order;
 import com.example.ecommerce.order.entity.OrderItem;
 import com.example.ecommerce.order.entity.OrderStatus;
@@ -32,13 +36,14 @@ public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
     private final CartServiceClient cartServiceClient;
+    private final PaymentServiceClient paymentServiceClient;
     private final OrderCancellationService orderCancellationService;
     private final EventPublisher eventPublisher;
     private final OrderMapper orderMapper;
 
     @Override
     @Transactional
-    public OrderResponse placeOrder(Long userId) {
+    public CheckoutResponse placeOrder(Long userId) {
         log.info("Starting checkout for userId={}", userId);
 
         CartClientResponse cart = cartServiceClient.getCart(userId).getData();
@@ -75,8 +80,13 @@ public class OrderServiceImpl implements OrderService {
                 .items(payloads)
                 .build());
 
-        log.info("Order PENDING, SAGA started: userId={}, orderId={}", userId, saved.getId());
-        return orderMapper.toResponse(saved);
+        PaymentClientResponse paymentResponse = paymentServiceClient
+                .createPaymentSession(new InitiatePaymentRequest(
+                        saved.getId(), saved.getOrderNumber(), userId, payloads, saved.getTotalAmount()))
+                .getData();
+
+        log.info("Order PENDING, SAGA started, payment session created: userId={}, orderId={}", userId, saved.getId());
+        return new CheckoutResponse(orderMapper.toResponse(saved), paymentResponse);
     }
 
     @Override

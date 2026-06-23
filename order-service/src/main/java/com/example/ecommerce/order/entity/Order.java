@@ -48,6 +48,9 @@ public class Order extends BaseEntity implements Auditable {
     @Column(name = "cancelled_at")
     private LocalDateTime cancelledAt;
 
+    @Column(name = "payment_link", length = 2048)
+    private String paymentLink;
+
     @Builder.Default
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();

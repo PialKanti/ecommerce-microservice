@@ -31,6 +31,9 @@ public class RabbitMQConfig {
     public static final String Q_INV_RESERVED      = "order.inventory.reserved";
     public static final String Q_INV_RES_FAILED    = "order.inventory.reservation.failed";
     public static final String Q_CART_CLEAR_FAILED = "order.cart.clear.failed";
+    public static final String Q_PAYMENT_INITIATED = "order.payment.initiated";
+    public static final String Q_PAYMENT_SUCCEEDED = "order.payment.succeeded";
+    public static final String Q_PAYMENT_FAILED    = "order.payment.failed";
 
     @Bean
     public TopicExchange eventsExchange() {
@@ -115,6 +118,81 @@ public class RabbitMQConfig {
     @Bean
     public Binding cartClearFailedDlqBinding(Queue cartClearFailedDlq, DirectExchange deadLetterExchange) {
         return BindingBuilder.bind(cartClearFailedDlq).to(deadLetterExchange).with(Q_CART_CLEAR_FAILED);
+    }
+
+    // ── order.payment.initiated ───────────────────────────────────────────────
+
+    @Bean
+    public Queue paymentInitiatedQueue() {
+        return QueueBuilder.durable(Q_PAYMENT_INITIATED)
+                .withArgument("x-dead-letter-exchange", DLX)
+                .withArgument("x-dead-letter-routing-key", Q_PAYMENT_INITIATED)
+                .build();
+    }
+
+    @Bean
+    public Queue paymentInitiatedDlq() {
+        return QueueBuilder.durable(Q_PAYMENT_INITIATED + ".dlq").build();
+    }
+
+    @Bean
+    public Binding paymentInitiatedBinding(Queue paymentInitiatedQueue, TopicExchange eventsExchange) {
+        return BindingBuilder.bind(paymentInitiatedQueue).to(eventsExchange).with("payment.initiated");
+    }
+
+    @Bean
+    public Binding paymentInitiatedDlqBinding(Queue paymentInitiatedDlq, DirectExchange deadLetterExchange) {
+        return BindingBuilder.bind(paymentInitiatedDlq).to(deadLetterExchange).with(Q_PAYMENT_INITIATED);
+    }
+
+    // ── order.payment.succeeded ───────────────────────────────────────────────
+
+    @Bean
+    public Queue paymentSucceededQueue() {
+        return QueueBuilder.durable(Q_PAYMENT_SUCCEEDED)
+                .withArgument("x-dead-letter-exchange", DLX)
+                .withArgument("x-dead-letter-routing-key", Q_PAYMENT_SUCCEEDED)
+                .build();
+    }
+
+    @Bean
+    public Queue paymentSucceededDlq() {
+        return QueueBuilder.durable(Q_PAYMENT_SUCCEEDED + ".dlq").build();
+    }
+
+    @Bean
+    public Binding paymentSucceededBinding(Queue paymentSucceededQueue, TopicExchange eventsExchange) {
+        return BindingBuilder.bind(paymentSucceededQueue).to(eventsExchange).with("payment.succeeded");
+    }
+
+    @Bean
+    public Binding paymentSucceededDlqBinding(Queue paymentSucceededDlq, DirectExchange deadLetterExchange) {
+        return BindingBuilder.bind(paymentSucceededDlq).to(deadLetterExchange).with(Q_PAYMENT_SUCCEEDED);
+    }
+
+    // ── order.payment.failed ──────────────────────────────────────────────────
+
+    @Bean
+    public Queue paymentFailedQueue() {
+        return QueueBuilder.durable(Q_PAYMENT_FAILED)
+                .withArgument("x-dead-letter-exchange", DLX)
+                .withArgument("x-dead-letter-routing-key", Q_PAYMENT_FAILED)
+                .build();
+    }
+
+    @Bean
+    public Queue paymentFailedDlq() {
+        return QueueBuilder.durable(Q_PAYMENT_FAILED + ".dlq").build();
+    }
+
+    @Bean
+    public Binding paymentFailedBinding(Queue paymentFailedQueue, TopicExchange eventsExchange) {
+        return BindingBuilder.bind(paymentFailedQueue).to(eventsExchange).with("payment.failed");
+    }
+
+    @Bean
+    public Binding paymentFailedDlqBinding(Queue paymentFailedDlq, DirectExchange deadLetterExchange) {
+        return BindingBuilder.bind(paymentFailedDlq).to(deadLetterExchange).with(Q_PAYMENT_FAILED);
     }
 
     // ── Messaging infrastructure ──────────────────────────────────────────────

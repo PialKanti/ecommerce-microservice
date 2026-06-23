@@ -25,6 +25,7 @@ public interface OrderMapper {
                 .status(order.getStatus())
                 .totalAmount(order.getTotalAmount())
                 .cancelledAt(order.getCancelledAt())
+                .paymentLink(order.getPaymentLink())
                 .items(items)
                 .createdAt(order.getCreatedAt())
                 .modifiedAt(order.getModifiedAt())
