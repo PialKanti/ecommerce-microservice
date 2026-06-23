@@ -1,6 +1,7 @@
 package com.example.ecommerce.order.messaging;
 
 import com.example.ecommerce.commons.event.OrderCancelledEvent;
+import com.example.ecommerce.commons.event.OrderPaidEvent;
 import com.example.ecommerce.commons.event.OrderConfirmedEvent;
 import com.example.ecommerce.commons.event.OrderCreatedEvent;
 import com.example.ecommerce.commons.event.PaymentFailedEvent;
@@ -32,6 +33,11 @@ public class EventPublisher {
     public void publishOrderCancelled(OrderCancelledEvent event) {
         log.info("Publishing OrderCancelledEvent: orderId={}, eventId={}", event.getOrderId(), event.getEventId());
         rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE, RabbitMQConfig.RK_ORDER_CANCELLED, event);
+    }
+
+    public void publishOrderPaid(OrderPaidEvent event) {
+        log.info("Publishing OrderPaidEvent: orderId={}, eventId={}", event.getOrderId(), event.getEventId());
+        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE, RabbitMQConfig.RK_ORDER_PAID, event);
     }
 
     public void publishPaymentInitiated(PaymentInitiatedEvent event) {

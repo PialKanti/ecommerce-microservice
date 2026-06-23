@@ -1,6 +1,7 @@
 package com.example.ecommerce.inventory.messaging;
 
 import com.example.ecommerce.commons.event.InventoryReservationFailedEvent;
+import com.example.ecommerce.commons.event.OrderPaidEvent;
 import com.example.ecommerce.commons.event.InventoryReservedEvent;
 import com.example.ecommerce.commons.event.OrderCancelledEvent;
 import com.example.ecommerce.commons.event.OrderCreatedEvent;
@@ -83,6 +84,20 @@ public class InventoryEventListener {
         log.info("Inventory released for orderId={}", event.getOrderId());
     }
 
+    @RabbitListener(queues = RabbitMQConfig.Q_ORDER_PAID)
+    @Transactional
+    public void onOrderPaid(OrderPaidEvent event) {
+        log.info("Received OrderPaidEvent: orderId={}, eventId={}", event.getOrderId(), event.getEventId());
+        if (isDuplicate(event.getEventId())) return;
+
+        for (OrderItemPayload item : event.getItems()) {
+            sellItem(item.getProductId(), item.getQuantity(), event.getOrderId());
+        }
+
+        markProcessed(event.getEventId());
+        log.info("Inventory decremented (sold) for orderId={}", event.getOrderId());
+    }
+
     private void reserveItem(Long productId, Integer quantity, Long orderId) {
         Inventory inventory = inventoryRepository.findByProductId(productId)
                 .orElseThrow(() -> new IllegalStateException(
@@ -109,6 +124,19 @@ public class InventoryEventListener {
             inventory.setReservedQuantity(inventory.getReservedQuantity() - releasable);
             inventoryRepository.saveAndFlush(inventory);
         }, () -> log.warn("Inventory not found for product {} during release for orderId={}", productId, orderId));
+    }
+
+    private void sellItem(Long productId, Integer quantity, Long orderId) {
+        inventoryRepository.findByProductId(productId).ifPresentOrElse(inventory -> {
+            int sellable = Math.min(quantity, inventory.getReservedQuantity());
+            if (sellable < quantity) {
+                log.warn("Selling less reserved than expected for product {}: expected={}, reservedQuantity={}",
+                        productId, quantity, inventory.getReservedQuantity());
+            }
+            inventory.setReservedQuantity(inventory.getReservedQuantity() - sellable);
+            inventory.setTotalQuantity(inventory.getTotalQuantity() - sellable);
+            inventoryRepository.saveAndFlush(inventory);
+        }, () -> log.warn("Inventory not found for product {} during sell for orderId={}", productId, orderId));
     }
 
     private boolean isDuplicate(UUID eventId) {

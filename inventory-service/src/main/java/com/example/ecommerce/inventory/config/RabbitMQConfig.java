@@ -29,6 +29,7 @@ public class RabbitMQConfig {
     // Queue names follow the pattern: <consuming-service>.<routing-key>
     public static final String Q_ORDER_CREATED   = "inventory.order.created";
     public static final String Q_ORDER_CANCELLED = "inventory.order.cancelled";
+    public static final String Q_ORDER_PAID      = "inventory.order.paid";
 
     @Bean
     public TopicExchange eventsExchange() {
@@ -88,6 +89,31 @@ public class RabbitMQConfig {
     @Bean
     public Binding orderCancelledDlqBinding(Queue orderCancelledDlq, DirectExchange deadLetterExchange) {
         return BindingBuilder.bind(orderCancelledDlq).to(deadLetterExchange).with(Q_ORDER_CANCELLED);
+    }
+
+    // ── inventory.order.paid ──────────────────────────────────────────────────
+
+    @Bean
+    public Queue orderPaidQueue() {
+        return QueueBuilder.durable(Q_ORDER_PAID)
+                .withArgument("x-dead-letter-exchange", DLX)
+                .withArgument("x-dead-letter-routing-key", Q_ORDER_PAID)
+                .build();
+    }
+
+    @Bean
+    public Queue orderPaidDlq() {
+        return QueueBuilder.durable(Q_ORDER_PAID + ".dlq").build();
+    }
+
+    @Bean
+    public Binding orderPaidBinding(Queue orderPaidQueue, TopicExchange eventsExchange) {
+        return BindingBuilder.bind(orderPaidQueue).to(eventsExchange).with("order.paid");
+    }
+
+    @Bean
+    public Binding orderPaidDlqBinding(Queue orderPaidDlq, DirectExchange deadLetterExchange) {
+        return BindingBuilder.bind(orderPaidDlq).to(deadLetterExchange).with(Q_ORDER_PAID);
     }
 
     // ── Messaging infrastructure ──────────────────────────────────────────────

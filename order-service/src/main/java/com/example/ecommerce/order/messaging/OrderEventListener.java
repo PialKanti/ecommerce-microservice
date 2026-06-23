@@ -1,6 +1,7 @@
 package com.example.ecommerce.order.messaging;
 
 import com.example.ecommerce.commons.event.CartClearFailedEvent;
+import com.example.ecommerce.commons.event.OrderPaidEvent;
 import com.example.ecommerce.commons.event.InventoryReservationFailedEvent;
 import com.example.ecommerce.commons.event.InventoryReservedEvent;
 import com.example.ecommerce.commons.event.OrderConfirmedEvent;
@@ -156,6 +157,25 @@ public class OrderEventListener {
 
         order.setStatus(OrderStatus.PAID);
         orderRepository.saveAndFlush(order);
+
+        List<OrderItemPayload> payloads = order.getItems().stream()
+                .map(item -> OrderItemPayload.builder()
+                        .productId(item.getProductId())
+                        .productName(item.getProductName())
+                        .quantity(item.getQuantity())
+                        .unitPrice(item.getUnitPrice())
+                        .build())
+                .toList();
+
+        eventPublisher.publishOrderPaid(OrderPaidEvent.builder()
+                .eventId(UUID.randomUUID())
+                .occurredAt(Instant.now())
+                .orderId(order.getId())
+                .orderNumber(order.getOrderNumber())
+                .userId(order.getUserId())
+                .items(payloads)
+                .build());
+
         markProcessed(event.getEventId());
         log.info("Order PAID: orderId={}", order.getId());
     }

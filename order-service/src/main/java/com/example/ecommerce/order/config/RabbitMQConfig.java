@@ -26,6 +26,7 @@ public class RabbitMQConfig {
     public static final String RK_ORDER_CREATED   = "order.created";
     public static final String RK_ORDER_CONFIRMED = "order.confirmed";
     public static final String RK_ORDER_CANCELLED = "order.cancelled";
+    public static final String RK_ORDER_PAID      = "order.paid";
 
     // Queue names follow the pattern: <consuming-service>.<routing-key>
     public static final String Q_INV_RESERVED      = "order.inventory.reserved";
