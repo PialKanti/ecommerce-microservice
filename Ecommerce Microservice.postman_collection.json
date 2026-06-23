@@ -1,0 +1,3315 @@
+{
+  "info": {
+    "_postman_id": "f8a2c9e1-3b4d-5f6a-7890-abcdef123456",
+    "name": "Ecommerce Microservice",
+    "description": "Professional Postman collection for testing and demoing the ecommerce microservice endpoints, exposed through the API gateway on port 8080. Requests are grouped by service and feature, covering authentication flows, user profile management, and fine-grained RBAC (roles, permissions, role-permission assignment, and user-role assignment). Run Authentication / Register User and Authentication / Login Admin first to populate the token variables used by all secured requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const uniqueSuffix = Date.now();",
+                  "pm.collectionVariables.set('AUTH_FIRST_NAME', 'Pial');",
+                  "pm.collectionVariables.set('AUTH_LAST_NAME', 'Samadder');",
+                  "pm.collectionVariables.set('AUTH_USERNAME', `pial_${uniqueSuffix}`);",
+                  "pm.collectionVariables.set('AUTH_EMAIL', `pial_${uniqueSuffix}@example.com`);",
+                  "pm.collectionVariables.set('AUTH_PHONE_NUMBER', '+8801700000000');",
+                  "pm.collectionVariables.set('AUTH_PASSWORD', 'StrongPass123');"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.data && response.data.id) {",
+                  "    pm.collectionVariables.set('AUTH_USER_ID', response.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"{{AUTH_FIRST_NAME}}\",\n  \"lastName\": \"{{AUTH_LAST_NAME}}\",\n  \"username\": \"{{AUTH_USERNAME}}\",\n  \"email\": \"{{AUTH_EMAIL}}\",\n  \"phoneNumber\": \"{{AUTH_PHONE_NUMBER}}\",\n  \"password\": \"{{AUTH_PASSWORD}}\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/auth/register",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "auth", "register"]
+            },
+            "description": "Registers a new active user account. This endpoint is public and does not require a bearer token. A unique username and email are generated via a timestamp suffix so the request can be run repeatedly without conflicts."
+          },
+          "response": []
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.data) {",
+                  "    pm.collectionVariables.set('ACCESS_TOKEN', response.data.accessToken);",
+                  "    pm.collectionVariables.set('REFRESH_TOKEN', response.data.refreshToken);",
+                  "    pm.collectionVariables.set('TOKEN_TYPE', response.data.tokenType || 'Bearer');",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{AUTH_USERNAME}}\",\n  \"password\": \"{{AUTH_PASSWORD}}\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/auth/login",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "auth", "login"]
+            },
+            "description": "Authenticates a registered user and stores the returned access and refresh tokens as ACCESS_TOKEN and REFRESH_TOKEN for use in user-scoped endpoints."
+          },
+          "response": []
+        },
+        {
+          "name": "Login Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.data) {",
+                  "    pm.collectionVariables.set('ADMIN_ACCESS_TOKEN', response.data.accessToken);",
+                  "    pm.collectionVariables.set('ADMIN_REFRESH_TOKEN', response.data.refreshToken);",
+                  "    pm.collectionVariables.set('TOKEN_TYPE', response.data.tokenType || 'Bearer');",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{ADMIN_USERNAME}}\",\n  \"password\": \"{{ADMIN_PASSWORD}}\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/auth/login",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "auth", "login"]
+            },
+            "description": "Authenticates the seeded demo administrator and stores admin tokens as ADMIN_ACCESS_TOKEN and ADMIN_REFRESH_TOKEN for all secured /api/v1/admin requests."
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.data) {",
+                  "    pm.collectionVariables.set('ACCESS_TOKEN', response.data.accessToken);",
+                  "    pm.collectionVariables.set('REFRESH_TOKEN', response.data.refreshToken);",
+                  "    pm.collectionVariables.set('TOKEN_TYPE', response.data.tokenType || 'Bearer');",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{REFRESH_TOKEN}}\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/auth/refresh",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "auth", "refresh"]
+            },
+            "description": "Rotates the refresh token and stores the newly returned access and refresh token pair. The old refresh token is revoked server-side. This endpoint is public and does not require a bearer token."
+          },
+          "response": []
+        },
+        {
+          "name": "Logout User",
+          "event": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{REFRESH_TOKEN}}\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/auth/logout",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "auth", "logout"]
+            },
+            "description": "Logs out the authenticated user by revoking the submitted refresh token and blacklisting the active access token in Redis. Requires a valid bearer token in the Authorization header."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User Profile",
+      "item": [
+        {
+          "name": "Happy Path",
+          "item": [
+            {
+              "name": "Get Current User Profile",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const response = pm.response.json();",
+                      "if (response.data && response.data.id) {",
+                      "    pm.collectionVariables.set('AUTH_USER_ID', response.data.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/users/me",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "users", "me"]
+                },
+                "description": "Retrieves the authenticated user's own profile. The API gateway automatically forwards the user identity via the X-User-Id header so no additional header is needed from the client."
+              },
+              "response": []
+            },
+            {
+              "name": "Update Current User Profile",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "pm.collectionVariables.set('UPDATED_FIRST_NAME', 'PialUpdated');",
+                      "pm.collectionVariables.set('UPDATED_PHONE_NUMBER', '+8801711111111');"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"firstName\": \"{{UPDATED_FIRST_NAME}}\",\n  \"lastName\": \"Samadder\",\n  \"phoneNumber\": \"{{UPDATED_PHONE_NUMBER}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/users/me",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "users", "me"]
+                },
+                "description": "Updates the authenticated user's own profile fields (firstName, lastName, phoneNumber). Username and email are immutable."
+              },
+              "response": []
+            },
+            {
+              "name": "Change Password",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('AUTH_PASSWORD')) {",
+                      "    throw new Error('Run Authentication / Register User first so AUTH_PASSWORD is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"currentPassword\": \"{{AUTH_PASSWORD}}\",\n  \"newPassword\": \"StrongNewPass456\",\n  \"confirmPassword\": \"StrongNewPass456\"\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/users/me/password",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "users", "me", "password"]
+                },
+                "description": "Changes the authenticated user's password after verifying the current password. The newPassword and confirmPassword fields must match and the new password must be at least 8 characters."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Validation And Error Scenarios",
+          "item": [
+            {
+              "name": "Get Profile - Unauthorized",
+              "event": [],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/users/me",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "users", "me"]
+                },
+                "description": "Verifies that the profile endpoint returns 401 when no bearer token is supplied."
+              },
+              "response": []
+            },
+            {
+              "name": "Update Profile - Blank First Name",
+              "event": [],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"firstName\": \"\",\n  \"lastName\": \"Samadder\",\n  \"phoneNumber\": \"+8801700000000\"\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/users/me",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "users", "me"]
+                },
+                "description": "Validates that firstName is required and cannot be blank for profile updates."
+              },
+              "response": []
+            },
+            {
+              "name": "Change Password - Mismatched Confirm",
+              "event": [],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"currentPassword\": \"{{AUTH_PASSWORD}}\",\n  \"newPassword\": \"StrongNewPass456\",\n  \"confirmPassword\": \"DoesNotMatch789\"\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/users/me/password",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "users", "me", "password"]
+                },
+                "description": "Validates that newPassword and confirmPassword must match."
+              },
+              "response": []
+            },
+            {
+              "name": "Change Password - Wrong Current Password",
+              "event": [],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"currentPassword\": \"WrongCurrentPass999\",\n  \"newPassword\": \"StrongNewPass456\",\n  \"confirmPassword\": \"StrongNewPass456\"\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/users/me/password",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "users", "me", "password"]
+                },
+                "description": "Validates that an incorrect current password is rejected with 401."
+              },
+              "response": []
+            },
+            {
+              "name": "Change Password - Too Short New Password",
+              "event": [],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"currentPassword\": \"{{AUTH_PASSWORD}}\",\n  \"newPassword\": \"short\",\n  \"confirmPassword\": \"short\"\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/users/me/password",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "users", "me", "password"]
+                },
+                "description": "Validates that the new password must be at least 8 characters long."
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "RBAC Management",
+      "item": [
+        {
+          "name": "Roles",
+          "item": [
+            {
+              "name": "List Roles",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const response = pm.response.json();",
+                      "const roles = response.data && response.data.content ? response.data.content : [];",
+                      "const role = roles.find(item => item.code === pm.collectionVariables.get('ROLE_CODE')) || roles[0];",
+                      "if (role && role.id) {",
+                      "    pm.collectionVariables.set('ROLE_ID', role.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/roles?page=0&size=10",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "roles"],
+                  "query": [
+                    { "key": "page", "value": "0" },
+                    { "key": "size", "value": "10" }
+                  ]
+                },
+                "description": "Lists RBAC roles with zero-based pagination. Requires ROLE_READ permission. The test script seeds ROLE_ID from the first matching result."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Role By ID",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('ROLE_ID')) {",
+                      "    throw new Error('Run RBAC Management / Roles / List Roles or Create Role first so ROLE_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/roles/{{ROLE_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "roles", "{{ROLE_ID}}"]
+                },
+                "description": "Retrieves a role by numeric identifier. Requires ROLE_READ permission."
+              },
+              "response": []
+            },
+            {
+              "name": "Create Role",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "pm.collectionVariables.set('ROLE_NAME', 'Support Agent');",
+                      "pm.collectionVariables.set('ROLE_CODE', 'SUPPORT_AGENT');",
+                      "pm.collectionVariables.set('ROLE_DESCRIPTION', 'Can read and cancel customer orders.');"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const response = pm.response.json();",
+                      "if (response.data && response.data.id) {",
+                      "    pm.collectionVariables.set('ROLE_ID', response.data.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"{{ROLE_NAME}}\",\n  \"code\": \"{{ROLE_CODE}}\",\n  \"description\": \"{{ROLE_DESCRIPTION}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/roles",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "roles"]
+                },
+                "description": "Creates a new RBAC role. Requires ROLE_CREATE permission. The code field must match a valid RoleCode enum value defined in the service."
+              },
+              "response": []
+            },
+            {
+              "name": "Update Role",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('ROLE_ID')) {",
+                      "    throw new Error('Run Create Role before updating a role so ROLE_ID is available.');",
+                      "}",
+                      "pm.collectionVariables.set('UPDATED_ROLE_NAME', 'Senior Support Agent');",
+                      "pm.collectionVariables.set('UPDATED_ROLE_DESCRIPTION', 'Can read, cancel, and escalate customer orders.');"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"{{UPDATED_ROLE_NAME}}\",\n  \"code\": \"{{ROLE_CODE}}\",\n  \"description\": \"{{UPDATED_ROLE_DESCRIPTION}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/roles/{{ROLE_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "roles", "{{ROLE_ID}}"]
+                },
+                "description": "Updates an existing RBAC role's name and description. Requires ROLE_UPDATE permission."
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Role",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('ROLE_ID')) {",
+                      "    throw new Error('Run Create Role before deleting a role so ROLE_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.collectionVariables.unset('ROLE_ID');"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/roles/{{ROLE_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "roles", "{{ROLE_ID}}"]
+                },
+                "description": "Deletes an RBAC role by identifier. Requires ROLE_DELETE permission. ROLE_ID is unset from collection variables on success."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Role - Not Found",
+              "event": [],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/roles/{{NON_EXISTING_ROLE_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "roles", "{{NON_EXISTING_ROLE_ID}}"]
+                },
+                "description": "Verifies not-found behavior when requesting a role with an unknown identifier."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Permissions",
+          "item": [
+            {
+              "name": "List Permissions",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const response = pm.response.json();",
+                      "const permissions = response.data && response.data.content ? response.data.content : [];",
+                      "const permission = permissions.find(item => item.code === pm.collectionVariables.get('PERMISSION_CODE')) || permissions[0];",
+                      "if (permission && permission.id) {",
+                      "    pm.collectionVariables.set('PERMISSION_ID', permission.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/permissions?page=0&size=10",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "permissions"],
+                  "query": [
+                    { "key": "page", "value": "0" },
+                    { "key": "size", "value": "10" }
+                  ]
+                },
+                "description": "Lists RBAC permissions with zero-based pagination. Requires PERMISSION_READ permission. The test script seeds PERMISSION_ID from the first matching result."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Permission By ID",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PERMISSION_ID')) {",
+                      "    throw new Error('Run RBAC Management / Permissions / List Permissions or Create Permission first so PERMISSION_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/permissions/{{PERMISSION_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "permissions", "{{PERMISSION_ID}}"]
+                },
+                "description": "Retrieves a permission by numeric identifier. Requires PERMISSION_READ permission."
+              },
+              "response": []
+            },
+            {
+              "name": "Create Permission",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "pm.collectionVariables.set('PERMISSION_NAME', 'Read Orders');",
+                      "pm.collectionVariables.set('PERMISSION_CODE', 'PERMISSION_ORDER_READ');",
+                      "pm.collectionVariables.set('PERMISSION_DESCRIPTION', 'Allows reading customer order data.');"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const response = pm.response.json();",
+                      "if (response.data && response.data.id) {",
+                      "    pm.collectionVariables.set('PERMISSION_ID', response.data.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"{{PERMISSION_NAME}}\",\n  \"code\": \"{{PERMISSION_CODE}}\",\n  \"description\": \"{{PERMISSION_DESCRIPTION}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/permissions",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "permissions"]
+                },
+                "description": "Creates a new RBAC permission. Requires PERMISSION_CREATE permission. The code field must match a valid PermissionCode enum value defined in the service."
+              },
+              "response": []
+            },
+            {
+              "name": "Update Permission",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PERMISSION_ID')) {",
+                      "    throw new Error('Run Create Permission before updating a permission so PERMISSION_ID is available.');",
+                      "}",
+                      "pm.collectionVariables.set('UPDATED_PERMISSION_NAME', 'Browse Orders');",
+                      "pm.collectionVariables.set('UPDATED_PERMISSION_DESCRIPTION', 'Allows support staff to browse and search customer order data.');"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"{{UPDATED_PERMISSION_NAME}}\",\n  \"code\": \"{{PERMISSION_CODE}}\",\n  \"description\": \"{{UPDATED_PERMISSION_DESCRIPTION}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/permissions/{{PERMISSION_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "permissions", "{{PERMISSION_ID}}"]
+                },
+                "description": "Updates an existing RBAC permission's name and description. Requires PERMISSION_UPDATE permission."
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Permission",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PERMISSION_ID')) {",
+                      "    throw new Error('Run Create Permission before deleting a permission so PERMISSION_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.collectionVariables.unset('PERMISSION_ID');"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/permissions/{{PERMISSION_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "permissions", "{{PERMISSION_ID}}"]
+                },
+                "description": "Deletes an RBAC permission by identifier. Requires PERMISSION_DELETE permission. PERMISSION_ID is unset from collection variables on success."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Permission - Not Found",
+              "event": [],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/permissions/{{NON_EXISTING_PERMISSION_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "permissions", "{{NON_EXISTING_PERMISSION_ID}}"]
+                },
+                "description": "Verifies not-found behavior when requesting a permission with an unknown identifier."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Role Permission Assignment",
+          "item": [
+            {
+              "name": "List Role Permissions",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('ROLE_ID')) {",
+                      "    throw new Error('Run RBAC Management / Roles / Create Role first so ROLE_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/roles/{{ROLE_ID}}/permissions",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "roles", "{{ROLE_ID}}", "permissions"]
+                },
+                "description": "Lists all permissions currently assigned to a role. Requires ROLE_READ permission."
+              },
+              "response": []
+            },
+            {
+              "name": "Assign Permission To Role",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('ROLE_ID')) {",
+                      "    throw new Error('Run Create Role before assigning a permission so ROLE_ID is available.');",
+                      "}",
+                      "if (!pm.collectionVariables.get('PERMISSION_ID')) {",
+                      "    throw new Error('Run Create Permission before assigning it to a role so PERMISSION_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/roles/{{ROLE_ID}}/permissions/{{PERMISSION_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "roles", "{{ROLE_ID}}", "permissions", "{{PERMISSION_ID}}"]
+                },
+                "description": "Assigns a permission to a role. Requires ROLE_CREATE permission. Returns the updated role with its full permission list."
+              },
+              "response": []
+            },
+            {
+              "name": "Remove Permission From Role",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('ROLE_ID')) {",
+                      "    throw new Error('Run Create Role before removing a permission so ROLE_ID is available.');",
+                      "}",
+                      "if (!pm.collectionVariables.get('PERMISSION_ID')) {",
+                      "    throw new Error('Run Assign Permission To Role before removing a permission so PERMISSION_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/roles/{{ROLE_ID}}/permissions/{{PERMISSION_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "roles", "{{ROLE_ID}}", "permissions", "{{PERMISSION_ID}}"]
+                },
+                "description": "Removes a permission from a role. Requires ROLE_DELETE permission. Returns the updated role with its remaining permission list."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "User Management",
+          "item": [
+            {
+              "name": "List Users",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const response = pm.response.json();",
+                      "const users = response.data && response.data.content ? response.data.content : [];",
+                      "const user = users[0];",
+                      "if (user && user.id) {",
+                      "    pm.collectionVariables.set('AUTH_USER_ID', user.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/users?page=0&size=10",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "users"],
+                  "query": [
+                    { "key": "page", "value": "0" },
+                    { "key": "size", "value": "10" },
+                    { "key": "search", "value": "", "disabled": true },
+                    { "key": "isActive", "value": "true", "disabled": true }
+                  ]
+                },
+                "description": "Returns a paginated list of all users. Optionally filter by search (matches username, email, firstName, lastName) and isActive status. Requires PERMISSION_USER_READ. The test script seeds AUTH_USER_ID from the first result."
+              },
+              "response": []
+            },
+            {
+              "name": "List Users - Search Filter",
+              "event": [],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/users?search=admin&isActive=true&page=0&size=10",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "users"],
+                  "query": [
+                    { "key": "search", "value": "admin" },
+                    { "key": "isActive", "value": "true" },
+                    { "key": "page", "value": "0" },
+                    { "key": "size", "value": "10" }
+                  ]
+                },
+                "description": "Lists users filtered by search term and active status. The search term is matched case-insensitively against username, email, firstName, and lastName."
+              },
+              "response": []
+            },
+            {
+              "name": "Get User By ID",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('AUTH_USER_ID')) {",
+                      "    throw new Error('Run User Management / List Users first so AUTH_USER_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/users/{{AUTH_USER_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "users", "{{AUTH_USER_ID}}"]
+                },
+                "description": "Retrieves a single user by their numeric ID. Requires PERMISSION_USER_READ."
+              },
+              "response": []
+            },
+            {
+              "name": "Deactivate User",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('AUTH_USER_ID')) {",
+                      "    throw new Error('Run User Management / List Users first so AUTH_USER_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"isActive\": false\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/users/{{AUTH_USER_ID}}/status",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "users", "{{AUTH_USER_ID}}", "status"]
+                },
+                "description": "Deactivates a user account by setting isActive to false. This operation is idempotent. Requires PERMISSION_USER_MANAGE."
+              },
+              "response": []
+            },
+            {
+              "name": "Activate User",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('AUTH_USER_ID')) {",
+                      "    throw new Error('Run User Management / List Users first so AUTH_USER_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"isActive\": true\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/users/{{AUTH_USER_ID}}/status",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "users", "{{AUTH_USER_ID}}", "status"]
+                },
+                "description": "Reactivates a previously deactivated user account. This operation is idempotent. Requires PERMISSION_USER_MANAGE."
+              },
+              "response": []
+            },
+            {
+              "name": "Get User - Not Found",
+              "event": [],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/users/{{NON_EXISTING_USER_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "users", "{{NON_EXISTING_USER_ID}}"]
+                },
+                "description": "Verifies not-found behavior when requesting a user with an unknown identifier. Expects a 404 response."
+              },
+              "response": []
+            },
+            {
+              "name": "Update User Status - Missing isActive Field",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('AUTH_USER_ID')) {",
+                      "    throw new Error('Run User Management / List Users first so AUTH_USER_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/users/{{AUTH_USER_ID}}/status",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "users", "{{AUTH_USER_ID}}", "status"]
+                },
+                "description": "Validates that the isActive field is required in the request body. Expects a 400 validation error."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "User Role Assignment",
+          "item": [
+            {
+              "name": "List User Roles",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('AUTH_USER_ID')) {",
+                      "    throw new Error('Run Authentication / Register User or User Profile / Happy Path / Get Current User Profile first so AUTH_USER_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/users/{{AUTH_USER_ID}}/roles",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "users", "{{AUTH_USER_ID}}", "roles"]
+                },
+                "description": "Lists all roles currently assigned to a user. Requires ROLE_ASSIGN permission."
+              },
+              "response": []
+            },
+            {
+              "name": "Assign Role To User",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('AUTH_USER_ID')) {",
+                      "    throw new Error('Run Authentication / Register User first so AUTH_USER_ID is available.');",
+                      "}",
+                      "if (!pm.collectionVariables.get('ROLE_ID')) {",
+                      "    throw new Error('Run RBAC Management / Roles / Create Role first so ROLE_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/users/{{AUTH_USER_ID}}/roles/{{ROLE_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "users", "{{AUTH_USER_ID}}", "roles", "{{ROLE_ID}}"]
+                },
+                "description": "Assigns a role to a user. Requires ROLE_ASSIGN permission. Returns the complete list of roles now held by the user."
+              },
+              "response": []
+            },
+            {
+              "name": "Remove Role From User",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('AUTH_USER_ID')) {",
+                      "    throw new Error('Run Authentication / Register User first so AUTH_USER_ID is available.');",
+                      "}",
+                      "if (!pm.collectionVariables.get('ROLE_ID')) {",
+                      "    throw new Error('Run Assign Role To User before removing a role so ROLE_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/users/{{AUTH_USER_ID}}/roles/{{ROLE_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "users", "{{AUTH_USER_ID}}", "roles", "{{ROLE_ID}}"]
+                },
+                "description": "Removes a role from a user. Requires ROLE_ASSIGN permission. Returns the remaining roles held by the user after removal."
+              },
+              "response": []
+            },
+            {
+              "name": "Assign Role To User - User Not Found",
+              "event": [],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/users/{{NON_EXISTING_USER_ID}}/roles/{{ROLE_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "users", "{{NON_EXISTING_USER_ID}}", "roles", "{{ROLE_ID}}"]
+                },
+                "description": "Verifies not-found behavior when assigning a role to an unknown user identifier."
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "Public",
+          "item": [
+            {
+              "name": "List Categories",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const response = pm.response.json();",
+                      "const categories = response.data && response.data.content ? response.data.content : [];",
+                      "const category = categories.find(item => item.code === pm.collectionVariables.get('CATEGORY_CODE')) || categories[0];",
+                      "if (category && category.id) {",
+                      "    pm.collectionVariables.set('CATEGORY_ID', category.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/categories?page=0&size=10",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "categories"],
+                  "query": [
+                    { "key": "search", "value": "", "disabled": true },
+                    { "key": "page", "value": "0" },
+                    { "key": "size", "value": "10" }
+                  ]
+                },
+                "description": "Lists all active categories with zero-based pagination. Supports optional partial-match search on name or code (case-insensitive). This endpoint is public and does not require a bearer token. The test script seeds CATEGORY_ID from the first matching result."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Category By ID",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('CATEGORY_ID')) {",
+                      "    throw new Error('Run Categories / Public / List Categories or Categories / Admin / Create Category first so CATEGORY_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/categories/{{CATEGORY_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "categories", "{{CATEGORY_ID}}"]
+                },
+                "description": "Retrieves a category by numeric identifier. This endpoint is public and does not require a bearer token."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Category - Not Found",
+              "event": [],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/categories/{{NON_EXISTING_CATEGORY_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "categories", "{{NON_EXISTING_CATEGORY_ID}}"]
+                },
+                "description": "Verifies not-found behavior when requesting a category with an unknown identifier."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Admin",
+          "item": [
+            {
+              "name": "List Categories",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const response = pm.response.json();",
+                      "const categories = response.data && response.data.content ? response.data.content : [];",
+                      "const category = categories.find(item => item.code === pm.collectionVariables.get('CATEGORY_CODE')) || categories[0];",
+                      "if (category && category.id) {",
+                      "    pm.collectionVariables.set('CATEGORY_ID', category.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/categories?page=0&size=10",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "categories"],
+                  "query": [
+                    { "key": "search", "value": "", "disabled": true },
+                    { "key": "isActive", "value": "true", "disabled": true },
+                    { "key": "page", "value": "0" },
+                    { "key": "size", "value": "10" }
+                  ]
+                },
+                "description": "Lists all categories (active and inactive) with zero-based pagination. Supports optional partial-match search on name or code (case-insensitive) and filtering by isActive status. Required permission: CATEGORY_READ. The test script seeds CATEGORY_ID from the first matching result."
+              },
+              "response": []
+            },
+            {
+              "name": "List Categories - Search Filter",
+              "event": [],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/categories?search=elec&isActive=true&page=0&size=10",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "categories"],
+                  "query": [
+                    { "key": "search", "value": "elec" },
+                    { "key": "isActive", "value": "true" },
+                    { "key": "page", "value": "0" },
+                    { "key": "size", "value": "10" }
+                  ]
+                },
+                "description": "Lists categories filtered by search term and active status. The search term is matched case-insensitively against name and code."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Category By ID",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('CATEGORY_ID')) {",
+                      "    throw new Error('Run Categories / Admin / List Categories or Create Category first so CATEGORY_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/categories/{{CATEGORY_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "categories", "{{CATEGORY_ID}}"]
+                },
+                "description": "Retrieves a single category by its numeric ID regardless of its active status. Required permission: CATEGORY_READ."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Category - Not Found",
+              "event": [],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/categories/{{NON_EXISTING_CATEGORY_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "categories", "{{NON_EXISTING_CATEGORY_ID}}"]
+                },
+                "description": "Verifies not-found behavior when requesting a category with an unknown identifier."
+              },
+              "response": []
+            },
+            {
+              "name": "Create Category",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "pm.collectionVariables.set('CATEGORY_NAME', 'Electronics');",
+                      "pm.collectionVariables.set('CATEGORY_CODE', 'ELEC');",
+                      "pm.collectionVariables.set('CATEGORY_DESCRIPTION', 'Electronic devices and gadgets.');"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const response = pm.response.json();",
+                      "if (response.data && response.data.id) {",
+                      "    pm.collectionVariables.set('CATEGORY_ID', response.data.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"{{CATEGORY_NAME}}\",\n  \"code\": \"{{CATEGORY_CODE}}\",\n  \"description\": \"{{CATEGORY_DESCRIPTION}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/categories",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "categories"]
+                },
+                "description": "Creates a new product category. Requires ROLE_ADMIN or ROLE_PRODUCT_MANAGER with PERMISSION_CATEGORY_CREATE. The code field must be unique."
+              },
+              "response": []
+            },
+            {
+              "name": "Update Category",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('CATEGORY_ID')) {",
+                      "    throw new Error('Run Categories / Admin / Create Category first so CATEGORY_ID is available.');",
+                      "}",
+                      "pm.collectionVariables.set('UPDATED_CATEGORY_NAME', 'Consumer Electronics');",
+                      "pm.collectionVariables.set('UPDATED_CATEGORY_DESCRIPTION', 'Updated consumer electronics and gadgets category.');"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"{{UPDATED_CATEGORY_NAME}}\",\n  \"description\": \"{{UPDATED_CATEGORY_DESCRIPTION}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/categories/{{CATEGORY_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "categories", "{{CATEGORY_ID}}"]
+                },
+                "description": "Updates an existing category's name and description. The code field is immutable after creation. Requires ROLE_ADMIN or ROLE_PRODUCT_MANAGER with PERMISSION_CATEGORY_UPDATE."
+              },
+              "response": []
+            },
+            {
+              "name": "Deactivate Category",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('CATEGORY_ID')) {",
+                      "    throw new Error('Run Categories / Admin / Create Category first so CATEGORY_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/categories/{{CATEGORY_ID}}/status?isActive=false",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "categories", "{{CATEGORY_ID}}", "status"],
+                  "query": [
+                    { "key": "isActive", "value": "false" }
+                  ]
+                },
+                "description": "Deactivates a category by setting isActive to false. This operation is idempotent. Requires ROLE_ADMIN or ROLE_PRODUCT_MANAGER with PERMISSION_CATEGORY_UPDATE."
+              },
+              "response": []
+            },
+            {
+              "name": "Activate Category",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('CATEGORY_ID')) {",
+                      "    throw new Error('Run Categories / Admin / Create Category first so CATEGORY_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/categories/{{CATEGORY_ID}}/status?isActive=true",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "categories", "{{CATEGORY_ID}}", "status"],
+                  "query": [
+                    { "key": "isActive", "value": "true" }
+                  ]
+                },
+                "description": "Reactivates a previously deactivated category. This operation is idempotent. Requires ROLE_ADMIN or ROLE_PRODUCT_MANAGER with PERMISSION_CATEGORY_UPDATE."
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "Public",
+          "item": [
+            {
+              "name": "List Products",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const response = pm.response.json();",
+                      "const products = response.data && response.data.content ? response.data.content : [];",
+                      "const product = products[0];",
+                      "if (product && product.id) {",
+                      "    pm.collectionVariables.set('PRODUCT_ID', product.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/products?page=0&size=10",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "products"],
+                  "query": [
+                    { "key": "search", "value": "", "disabled": true },
+                    { "key": "categoryId", "value": "", "disabled": true },
+                    { "key": "minPrice", "value": "", "disabled": true },
+                    { "key": "maxPrice", "value": "", "disabled": true },
+                    { "key": "page", "value": "0" },
+                    { "key": "size", "value": "10" }
+                  ]
+                },
+                "description": "Lists all active products with zero-based pagination. Supports optional partial-match search on name or SKU (case-insensitive) and filtering by categoryId, minPrice, and maxPrice. This endpoint is public and does not require a bearer token. The test script seeds PRODUCT_ID from the first result."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Product By ID",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PRODUCT_ID')) {",
+                      "    throw new Error('Run Products / Public / List Products or Products / Admin / Create Product first so PRODUCT_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/products/{{PRODUCT_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "products", "{{PRODUCT_ID}}"]
+                },
+                "description": "Retrieves a product by numeric identifier. This endpoint is public and does not require a bearer token."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Product - Not Found",
+              "event": [],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/products/{{NON_EXISTING_PRODUCT_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "products", "{{NON_EXISTING_PRODUCT_ID}}"]
+                },
+                "description": "Verifies not-found behavior when requesting a product with an unknown identifier."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Admin",
+          "item": [
+            {
+              "name": "List Products",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const response = pm.response.json();",
+                      "const products = response.data && response.data.content ? response.data.content : [];",
+                      "const product = products[0];",
+                      "if (product && product.id) {",
+                      "    pm.collectionVariables.set('PRODUCT_ID', product.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/products?page=0&size=10",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "products"],
+                  "query": [
+                    { "key": "search", "value": "", "disabled": true },
+                    { "key": "categoryId", "value": "", "disabled": true },
+                    { "key": "minPrice", "value": "", "disabled": true },
+                    { "key": "maxPrice", "value": "", "disabled": true },
+                    { "key": "isActive", "value": "true", "disabled": true },
+                    { "key": "page", "value": "0" },
+                    { "key": "size", "value": "10" }
+                  ]
+                },
+                "description": "Lists all products (active and inactive) with zero-based pagination. Supports optional partial-match search on name or SKU (case-insensitive) and filtering by categoryId, price range, and isActive status. Required permission: PRODUCT_READ. The test script seeds PRODUCT_ID from the first result."
+              },
+              "response": []
+            },
+            {
+              "name": "List Products - Search Filter",
+              "event": [],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/products?search=phone&isActive=true&page=0&size=10",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "products"],
+                  "query": [
+                    { "key": "search", "value": "phone" },
+                    { "key": "categoryId", "value": "", "disabled": true },
+                    { "key": "minPrice", "value": "", "disabled": true },
+                    { "key": "maxPrice", "value": "", "disabled": true },
+                    { "key": "isActive", "value": "true" },
+                    { "key": "page", "value": "0" },
+                    { "key": "size", "value": "10" }
+                  ]
+                },
+                "description": "Lists products filtered by search term and active status. The search term is matched case-insensitively against name and SKU. Enable categoryId, minPrice, or maxPrice query params as needed."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Product By ID",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PRODUCT_ID')) {",
+                      "    throw new Error('Run Products / Admin / List Products or Create Product first so PRODUCT_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/products/{{PRODUCT_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "products", "{{PRODUCT_ID}}"]
+                },
+                "description": "Retrieves a single product by its numeric ID regardless of its active status. Required permission: PRODUCT_READ."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Product - Not Found",
+              "event": [],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/products/{{NON_EXISTING_PRODUCT_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "products", "{{NON_EXISTING_PRODUCT_ID}}"]
+                },
+                "description": "Verifies not-found behavior when requesting a product with an unknown identifier."
+              },
+              "response": []
+            },
+            {
+              "name": "Create Product",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('CATEGORY_ID')) {",
+                      "    throw new Error('Run Categories / Admin / Create Category first so CATEGORY_ID is available.');",
+                      "}",
+                      "const uniqueSuffix = Date.now();",
+                      "pm.collectionVariables.set('PRODUCT_SKU', `PHONE-${uniqueSuffix}`);",
+                      "pm.collectionVariables.set('PRODUCT_NAME', 'Smartphone Pro');",
+                      "pm.collectionVariables.set('PRODUCT_DESCRIPTION', 'Latest Android smartphone with 128GB storage.');",
+                      "pm.collectionVariables.set('PRODUCT_PRICE', 499.99);",
+                      "pm.collectionVariables.set('PRODUCT_IMAGE_URL', 'https://example.com/products/smartphone-pro.jpg');"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const response = pm.response.json();",
+                      "if (response.data && response.data.id) {",
+                      "    pm.collectionVariables.set('PRODUCT_ID', response.data.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"sku\": \"{{PRODUCT_SKU}}\",\n  \"name\": \"{{PRODUCT_NAME}}\",\n  \"description\": \"{{PRODUCT_DESCRIPTION}}\",\n  \"price\": {{PRODUCT_PRICE}},\n  \"isActive\": true,\n  \"categoryId\": {{CATEGORY_ID}},\n  \"imageUrl\": \"{{PRODUCT_IMAGE_URL}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/products",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "products"]
+                },
+                "description": "Creates a new product. Requires ROLE_ADMIN or ROLE_PRODUCT_MANAGER with PERMISSION_PRODUCT_CREATE. A unique SKU is generated via a timestamp suffix so the request can be run repeatedly without conflicts. Run Categories / Admin / Create Category first so CATEGORY_ID is populated."
+              },
+              "response": []
+            },
+            {
+              "name": "Update Product",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PRODUCT_ID')) {",
+                      "    throw new Error('Run Products / Admin / Create Product first so PRODUCT_ID is available.');",
+                      "}",
+                      "if (!pm.collectionVariables.get('CATEGORY_ID')) {",
+                      "    throw new Error('Run Categories / Admin / Create Category first so CATEGORY_ID is available.');",
+                      "}",
+                      "pm.collectionVariables.set('UPDATED_PRODUCT_NAME', 'Smartphone Pro Max');",
+                      "pm.collectionVariables.set('UPDATED_PRODUCT_DESCRIPTION', 'Updated premium smartphone with 256GB storage.');",
+                      "pm.collectionVariables.set('UPDATED_PRODUCT_PRICE', 599.99);"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"{{UPDATED_PRODUCT_NAME}}\",\n  \"description\": \"{{UPDATED_PRODUCT_DESCRIPTION}}\",\n  \"price\": {{UPDATED_PRODUCT_PRICE}},\n  \"isActive\": true,\n  \"categoryId\": {{CATEGORY_ID}},\n  \"imageUrl\": \"{{PRODUCT_IMAGE_URL}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/products/{{PRODUCT_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "products", "{{PRODUCT_ID}}"]
+                },
+                "description": "Updates an existing product's details. The SKU field is immutable after creation. Requires ROLE_ADMIN or ROLE_PRODUCT_MANAGER with PERMISSION_PRODUCT_UPDATE."
+              },
+              "response": []
+            },
+            {
+              "name": "Deactivate Product",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PRODUCT_ID')) {",
+                      "    throw new Error('Run Products / Admin / Create Product first so PRODUCT_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/products/{{PRODUCT_ID}}/status?isActive=false",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "products", "{{PRODUCT_ID}}", "status"],
+                  "query": [
+                    { "key": "isActive", "value": "false" }
+                  ]
+                },
+                "description": "Deactivates a product by setting isActive to false. This operation is idempotent. Requires ROLE_ADMIN or ROLE_PRODUCT_MANAGER with PERMISSION_PRODUCT_UPDATE."
+              },
+              "response": []
+            },
+            {
+              "name": "Activate Product",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PRODUCT_ID')) {",
+                      "    throw new Error('Run Products / Admin / Create Product first so PRODUCT_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/products/{{PRODUCT_ID}}/status?isActive=true",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "products", "{{PRODUCT_ID}}", "status"],
+                  "query": [
+                    { "key": "isActive", "value": "true" }
+                  ]
+                },
+                "description": "Reactivates a previously deactivated product. This operation is idempotent. Requires ROLE_ADMIN or ROLE_PRODUCT_MANAGER with PERMISSION_PRODUCT_UPDATE."
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Inventory",
+      "item": [
+        {
+          "name": "Public",
+          "item": [
+            {
+              "name": "Get Inventory By Product ID",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PRODUCT_ID')) {",
+                      "    throw new Error('Run Products / Public / List Products or Products / Admin / Create Product first so PRODUCT_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/inventory/{{PRODUCT_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "inventory", "{{PRODUCT_ID}}"]
+                },
+                "description": "Retrieves current inventory levels for a product by its numeric ID. This endpoint is public and does not require a bearer token."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Inventory - Not Found",
+              "event": [],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/inventory/{{NON_EXISTING_PRODUCT_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "inventory", "{{NON_EXISTING_PRODUCT_ID}}"]
+                },
+                "description": "Verifies not-found behavior when requesting inventory for an unknown product identifier."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Admin",
+          "item": [
+            {
+              "name": "Create Inventory",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PRODUCT_ID')) {",
+                      "    throw new Error('Run Products / Admin / Create Product first so PRODUCT_ID is available.');",
+                      "}",
+                      "pm.collectionVariables.set('INVENTORY_QUANTITY', 100);"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"productId\": {{PRODUCT_ID}},\n  \"totalQuantity\": {{INVENTORY_QUANTITY}}\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/inventory",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "inventory"]
+                },
+                "description": "Creates an inventory record for a product. Requires INVENTORY_MANAGER or ADMIN role. Each product can only have one inventory record. Run Products / Admin / Create Product first so PRODUCT_ID is populated."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Inventory By Product ID",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PRODUCT_ID')) {",
+                      "    throw new Error('Run Inventory / Admin / Create Inventory first so PRODUCT_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/inventory/{{PRODUCT_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "inventory", "{{PRODUCT_ID}}"]
+                },
+                "description": "Retrieves inventory details for a product by its numeric ID. Requires INVENTORY_MANAGER or ADMIN role."
+              },
+              "response": []
+            },
+            {
+              "name": "Increase Stock",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PRODUCT_ID')) {",
+                      "    throw new Error('Run Inventory / Admin / Create Inventory first so PRODUCT_ID is available.');",
+                      "}",
+                      "pm.collectionVariables.set('INVENTORY_ADJUST_QUANTITY', 10);"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"quantity\": {{INVENTORY_ADJUST_QUANTITY}}\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/inventory/{{PRODUCT_ID}}/increase",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "inventory", "{{PRODUCT_ID}}", "increase"]
+                },
+                "description": "Increases the total stock quantity for a product. Requires INVENTORY_MANAGER or ADMIN role. Does not affect reserved quantity."
+              },
+              "response": []
+            },
+            {
+              "name": "Decrease Stock",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PRODUCT_ID')) {",
+                      "    throw new Error('Run Inventory / Admin / Create Inventory first so PRODUCT_ID is available.');",
+                      "}",
+                      "pm.collectionVariables.set('INVENTORY_ADJUST_QUANTITY', 10);"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"quantity\": {{INVENTORY_ADJUST_QUANTITY}}\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/inventory/{{PRODUCT_ID}}/decrease",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "inventory", "{{PRODUCT_ID}}", "decrease"]
+                },
+                "description": "Decreases the total stock quantity for a product. Requires INVENTORY_MANAGER or ADMIN role. Returns 409 if the resulting total would fall below the current reserved quantity."
+              },
+              "response": []
+            },
+            {
+              "name": "Reserve Stock",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PRODUCT_ID')) {",
+                      "    throw new Error('Run Inventory / Admin / Create Inventory first so PRODUCT_ID is available.');",
+                      "}",
+                      "pm.collectionVariables.set('INVENTORY_ADJUST_QUANTITY', 10);"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"quantity\": {{INVENTORY_ADJUST_QUANTITY}}\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/inventory/{{PRODUCT_ID}}/reserve",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "inventory", "{{PRODUCT_ID}}", "reserve"]
+                },
+                "description": "Reserves available stock, typically called during order creation. Requires INVENTORY_MANAGER or ADMIN role. Returns 409 if available quantity (total minus reserved) is less than the requested amount."
+              },
+              "response": []
+            },
+            {
+              "name": "Release Stock",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PRODUCT_ID')) {",
+                      "    throw new Error('Run Inventory / Admin / Create Inventory and Reserve Stock first so PRODUCT_ID is available and some stock is reserved.');",
+                      "}",
+                      "pm.collectionVariables.set('INVENTORY_ADJUST_QUANTITY', 10);"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"quantity\": {{INVENTORY_ADJUST_QUANTITY}}\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/inventory/{{PRODUCT_ID}}/release",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "inventory", "{{PRODUCT_ID}}", "release"]
+                },
+                "description": "Releases previously reserved stock, typically called on order cancellation. Requires INVENTORY_MANAGER or ADMIN role. Returns 409 if the release quantity exceeds the current reserved quantity."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Inventory - Not Found",
+              "event": [],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/inventory/{{NON_EXISTING_PRODUCT_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "inventory", "{{NON_EXISTING_PRODUCT_ID}}"]
+                },
+                "description": "Verifies not-found behavior when requesting inventory for an unknown product identifier."
+              },
+              "response": []
+            },
+            {
+              "name": "Create Inventory - Product Not Found",
+              "event": [],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"productId\": {{NON_EXISTING_PRODUCT_ID}},\n  \"totalQuantity\": 100\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/inventory",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "inventory"]
+                },
+                "description": "Verifies that creating inventory for a non-existent product returns 404. The FeignErrorDecoder translates the 404 from product-service into a not-found response."
+              },
+              "response": []
+            },
+            {
+              "name": "Create Inventory - Duplicate",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PRODUCT_ID')) {",
+                      "    throw new Error('Run Inventory / Admin / Create Inventory first so PRODUCT_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"productId\": {{PRODUCT_ID}},\n  \"totalQuantity\": 50\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/inventory",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "inventory"]
+                },
+                "description": "Verifies that creating a second inventory record for the same product returns 409 Conflict. Run Create Inventory first to establish the record."
+              },
+              "response": []
+            },
+            {
+              "name": "Reserve Stock - Insufficient Available",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PRODUCT_ID')) {",
+                      "    throw new Error('Run Inventory / Admin / Create Inventory first so PRODUCT_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"quantity\": 999999\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/inventory/{{PRODUCT_ID}}/reserve",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "inventory", "{{PRODUCT_ID}}", "reserve"]
+                },
+                "description": "Verifies that reserving more stock than is available returns 409 Conflict."
+              },
+              "response": []
+            },
+            {
+              "name": "Decrease Stock - Would Fall Below Reserved",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PRODUCT_ID')) {",
+                      "    throw new Error('Run Inventory / Admin / Create Inventory and Reserve Stock first so PRODUCT_ID is available and some stock is reserved.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"quantity\": 999999\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/inventory/{{PRODUCT_ID}}/decrease",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "inventory", "{{PRODUCT_ID}}", "decrease"]
+                },
+                "description": "Verifies that decreasing total stock to below the current reserved quantity returns 409 Conflict."
+              },
+              "response": []
+            },
+            {
+              "name": "Release Stock - Exceeds Reserved",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PRODUCT_ID')) {",
+                      "    throw new Error('Run Inventory / Admin / Create Inventory first so PRODUCT_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"quantity\": 999999\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/inventory/{{PRODUCT_ID}}/release",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "inventory", "{{PRODUCT_ID}}", "release"]
+                },
+                "description": "Verifies that releasing more stock than is currently reserved returns 409 Conflict."
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Cart",
+      "item": [
+        {
+          "name": "Happy Path",
+          "item": [
+            {
+              "name": "Add Item to Cart",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PRODUCT_ID')) {",
+                      "    throw new Error('Run Products / Public / List Products or Products / Admin / Create Product first so PRODUCT_ID is available.');",
+                      "}",
+                      "pm.collectionVariables.set('CART_ITEM_QUANTITY', 2);"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"productId\": {{PRODUCT_ID}},\n  \"quantity\": {{CART_ITEM_QUANTITY}}\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/cart/items",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "cart", "items"]
+                },
+                "description": "Adds an active product to the current user's cart. Validates that the product exists and that available inventory is sufficient for the total requested quantity. Adding a product already in the cart merges quantities rather than creating a duplicate line. Requires a valid bearer token."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Cart",
+              "event": [],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/cart",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "cart"]
+                },
+                "description": "Retrieves the current user's cart including all line items, total quantity, and subtotal. Returns an empty cart response (id=null, items=[], totalQuantity=0, subtotal=0.0) rather than 404 when no cart exists yet."
+              },
+              "response": []
+            },
+            {
+              "name": "Clear Cart",
+              "event": [],
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/cart",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "cart"]
+                },
+                "description": "Removes all items from the current user's cart. Returns 204 No Content. Idempotent — a no-op if no cart exists."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Validation And Error Scenarios",
+          "item": [
+            {
+              "name": "Get Cart - Unauthorized",
+              "event": [],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/cart",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "cart"]
+                },
+                "description": "Verifies that the cart endpoint returns 401 when no bearer token is supplied."
+              },
+              "response": []
+            },
+            {
+              "name": "Add Item - Product Not Found",
+              "event": [],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"productId\": {{NON_EXISTING_PRODUCT_ID}},\n  \"quantity\": 1\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/cart/items",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "cart", "items"]
+                },
+                "description": "Verifies that adding a non-existent product to the cart returns 404. The FeignErrorDecoder in cart-service translates the 404 response from product-service."
+              },
+              "response": []
+            },
+            {
+              "name": "Add Item - Insufficient Stock",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('PRODUCT_ID')) {",
+                      "    throw new Error('Run Products / Public / List Products or Products / Admin / Create Product first so PRODUCT_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"productId\": {{PRODUCT_ID}},\n  \"quantity\": 999999\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/cart/items",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "cart", "items"]
+                },
+                "description": "Verifies that requesting more stock than is available returns 409 Conflict. cart-service checks available inventory via Feign before adding the item."
+              },
+              "response": []
+            },
+            {
+              "name": "Add Item - Missing Product ID",
+              "event": [],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"quantity\": 1\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/cart/items",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "cart", "items"]
+                },
+                "description": "Validates that productId is required when adding items to cart. Expects a 400 validation error."
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "User",
+          "item": [
+            {
+              "name": "Checkout",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const response = pm.response.json();",
+                      "if (response.data && response.data.id) {",
+                      "    pm.collectionVariables.set('ORDER_ID', response.data.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/orders/checkout",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "orders", "checkout"]
+                },
+                "description": "Converts the current user's cart into a PENDING order and publishes an OrderCreatedEvent to trigger inventory reservation via the SAGA. The response returns immediately in PENDING status — poll GET /api/v1/orders/{id} to observe the transition to CONFIRMED (or CANCELLED if reservation fails). Run Cart / Happy Path / Add Item to Cart first so the cart is populated."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Order By ID",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('ORDER_ID')) {",
+                      "    throw new Error('Run Orders / User / Checkout first so ORDER_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/orders/{{ORDER_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "orders", "{{ORDER_ID}}"]
+                },
+                "description": "Retrieves an order owned by the current user. Returns 403 if the order belongs to a different user. Use this endpoint to poll for the PENDING → CONFIRMED transition after checkout."
+              },
+              "response": []
+            },
+            {
+              "name": "Cancel Order",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('ORDER_ID')) {",
+                      "    throw new Error('Run Orders / User / Checkout first so ORDER_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/orders/{{ORDER_ID}}/cancel",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "orders", "{{ORDER_ID}}", "cancel"]
+                },
+                "description": "Cancels a PENDING or CONFIRMED order owned by the current user and publishes OrderCancelledEvent to trigger inventory release via the SAGA. Returns 409 if the order is already CANCELLED or in a non-cancellable state."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Admin",
+          "item": [
+            {
+              "name": "Get Order By ID",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('ORDER_ID')) {",
+                      "    throw new Error('Run Orders / User / Checkout first so ORDER_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/orders/{{ORDER_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "orders", "{{ORDER_ID}}"]
+                },
+                "description": "Retrieves any order regardless of owner. Requires ADMIN or SUPPORT_AGENT role with PERMISSION_ORDER_READ."
+              },
+              "response": []
+            },
+            {
+              "name": "Cancel Order",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('ORDER_ID')) {",
+                      "    throw new Error('Run Orders / User / Checkout first so ORDER_ID is available.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/orders/{{ORDER_ID}}/cancel",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "orders", "{{ORDER_ID}}", "cancel"]
+                },
+                "description": "Cancels any PENDING or CONFIRMED order and publishes OrderCancelledEvent to trigger inventory release. Requires ADMIN or SUPPORT_AGENT role with PERMISSION_ORDER_CANCEL."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Order - Not Found",
+              "event": [],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/orders/{{NON_EXISTING_ORDER_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "admin", "orders", "{{NON_EXISTING_ORDER_ID}}"]
+                },
+                "description": "Verifies not-found behavior when requesting an order with an unknown identifier."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Validation And Error Scenarios",
+          "item": [
+            {
+              "name": "Checkout - Empty Cart",
+              "event": [],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/orders/checkout",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "orders", "checkout"]
+                },
+                "description": "Verifies that checkout with an empty or non-existent cart returns 409 Conflict. Run Cart / Happy Path / Clear Cart first to ensure the cart is empty."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Order - Not Found",
+              "event": [],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/orders/{{NON_EXISTING_ORDER_ID}}",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "orders", "{{NON_EXISTING_ORDER_ID}}"]
+                },
+                "description": "Verifies not-found behavior when requesting an order with an unknown identifier."
+              },
+              "response": []
+            },
+            {
+              "name": "Cancel Order - Already Cancelled",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('ORDER_ID')) {",
+                      "    throw new Error('Run Orders / User / Checkout and Cancel Order first so ORDER_ID is available and the order is already cancelled.');",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/orders/{{ORDER_ID}}/cancel",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "orders", "{{ORDER_ID}}", "cancel"]
+                },
+                "description": "Verifies that cancelling an already-cancelled order returns 409 Conflict. Run Orders / User / Cancel Order first to put the order into CANCELLED state."
+              },
+              "response": []
+            },
+            {
+              "name": "Checkout - Unauthorized",
+              "event": [],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/orders/checkout",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "v1", "orders", "checkout"]
+                },
+                "description": "Verifies that the checkout endpoint returns 401 when no bearer token is supplied."
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.collectionVariables.set('NON_EXISTING_ROLE_ID', pm.collectionVariables.get('NON_EXISTING_ROLE_ID') || '999999999');",
+          "pm.collectionVariables.set('NON_EXISTING_PERMISSION_ID', pm.collectionVariables.get('NON_EXISTING_PERMISSION_ID') || '999999999');",
+          "pm.collectionVariables.set('NON_EXISTING_USER_ID', pm.collectionVariables.get('NON_EXISTING_USER_ID') || '999999999');",
+          "pm.collectionVariables.set('NON_EXISTING_CATEGORY_ID', pm.collectionVariables.get('NON_EXISTING_CATEGORY_ID') || '999999999');",
+          "pm.collectionVariables.set('NON_EXISTING_PRODUCT_ID', pm.collectionVariables.get('NON_EXISTING_PRODUCT_ID') || '999999999');",
+          "pm.collectionVariables.set('NON_EXISTING_ORDER_ID', pm.collectionVariables.get('NON_EXISTING_ORDER_ID') || '999999999');"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "ACCESS_TOKEN",
+      "value": ""
+    },
+    {
+      "key": "REFRESH_TOKEN",
+      "value": ""
+    },
+    {
+      "key": "TOKEN_TYPE",
+      "value": "Bearer"
+    },
+    {
+      "key": "ADMIN_USERNAME",
+      "value": "admin"
+    },
+    {
+      "key": "ADMIN_PASSWORD",
+      "value": "StrongPass123"
+    },
+    {
+      "key": "ADMIN_ACCESS_TOKEN",
+      "value": ""
+    },
+    {
+      "key": "ADMIN_REFRESH_TOKEN",
+      "value": ""
+    },
+    {
+      "key": "AUTH_USER_ID",
+      "value": ""
+    },
+    {
+      "key": "AUTH_FIRST_NAME",
+      "value": "Pial"
+    },
+    {
+      "key": "AUTH_LAST_NAME",
+      "value": "Samadder"
+    },
+    {
+      "key": "AUTH_USERNAME",
+      "value": ""
+    },
+    {
+      "key": "AUTH_EMAIL",
+      "value": ""
+    },
+    {
+      "key": "AUTH_PHONE_NUMBER",
+      "value": "+8801700000000"
+    },
+    {
+      "key": "AUTH_PASSWORD",
+      "value": "StrongPass123"
+    },
+    {
+      "key": "UPDATED_FIRST_NAME",
+      "value": "PialUpdated"
+    },
+    {
+      "key": "UPDATED_PHONE_NUMBER",
+      "value": "+8801711111111"
+    },
+    {
+      "key": "ROLE_ID",
+      "value": ""
+    },
+    {
+      "key": "ROLE_NAME",
+      "value": "Support Agent"
+    },
+    {
+      "key": "ROLE_CODE",
+      "value": "SUPPORT_AGENT"
+    },
+    {
+      "key": "ROLE_DESCRIPTION",
+      "value": "Can read and cancel customer orders."
+    },
+    {
+      "key": "UPDATED_ROLE_NAME",
+      "value": "Senior Support Agent"
+    },
+    {
+      "key": "UPDATED_ROLE_DESCRIPTION",
+      "value": "Can read, cancel, and escalate customer orders."
+    },
+    {
+      "key": "NON_EXISTING_ROLE_ID",
+      "value": "999999999"
+    },
+    {
+      "key": "PERMISSION_ID",
+      "value": ""
+    },
+    {
+      "key": "PERMISSION_NAME",
+      "value": "Read Orders"
+    },
+    {
+      "key": "PERMISSION_CODE",
+      "value": "PERMISSION_ORDER_READ"
+    },
+    {
+      "key": "PERMISSION_DESCRIPTION",
+      "value": "Allows reading customer order data."
+    },
+    {
+      "key": "UPDATED_PERMISSION_NAME",
+      "value": "Browse Orders"
+    },
+    {
+      "key": "UPDATED_PERMISSION_DESCRIPTION",
+      "value": "Allows support staff to browse and search customer order data."
+    },
+    {
+      "key": "NON_EXISTING_PERMISSION_ID",
+      "value": "999999999"
+    },
+    {
+      "key": "NON_EXISTING_USER_ID",
+      "value": "999999999"
+    },
+    {
+      "key": "CATEGORY_ID",
+      "value": ""
+    },
+    {
+      "key": "CATEGORY_NAME",
+      "value": "Electronics"
+    },
+    {
+      "key": "CATEGORY_CODE",
+      "value": "ELEC"
+    },
+    {
+      "key": "CATEGORY_DESCRIPTION",
+      "value": "Electronic devices and gadgets."
+    },
+    {
+      "key": "UPDATED_CATEGORY_NAME",
+      "value": "Consumer Electronics"
+    },
+    {
+      "key": "UPDATED_CATEGORY_DESCRIPTION",
+      "value": "Updated consumer electronics and gadgets category."
+    },
+    {
+      "key": "NON_EXISTING_CATEGORY_ID",
+      "value": "999999999"
+    },
+    {
+      "key": "PRODUCT_ID",
+      "value": ""
+    },
+    {
+      "key": "PRODUCT_SKU",
+      "value": ""
+    },
+    {
+      "key": "PRODUCT_NAME",
+      "value": "Smartphone Pro"
+    },
+    {
+      "key": "PRODUCT_DESCRIPTION",
+      "value": "Latest Android smartphone with 128GB storage."
+    },
+    {
+      "key": "PRODUCT_PRICE",
+      "value": "499.99"
+    },
+    {
+      "key": "PRODUCT_IMAGE_URL",
+      "value": "https://example.com/products/smartphone-pro.jpg"
+    },
+    {
+      "key": "UPDATED_PRODUCT_NAME",
+      "value": "Smartphone Pro Max"
+    },
+    {
+      "key": "UPDATED_PRODUCT_DESCRIPTION",
+      "value": "Updated premium smartphone with 256GB storage."
+    },
+    {
+      "key": "UPDATED_PRODUCT_PRICE",
+      "value": "599.99"
+    },
+    {
+      "key": "NON_EXISTING_PRODUCT_ID",
+      "value": "999999999"
+    },
+    {
+      "key": "INVENTORY_QUANTITY",
+      "value": "100"
+    },
+    {
+      "key": "INVENTORY_ADJUST_QUANTITY",
+      "value": "10"
+    },
+    {
+      "key": "CART_ITEM_QUANTITY",
+      "value": "2"
+    },
+    {
+      "key": "ORDER_ID",
+      "value": ""
+    },
+    {
+      "key": "NON_EXISTING_ORDER_ID",
+      "value": "999999999"
+    }
+  ]
+}
