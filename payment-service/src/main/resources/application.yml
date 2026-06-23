@@ -52,7 +52,7 @@ stripe:
   api-key: ${STRIPE_API_KEY:sk_test_51ShYsBFIOgharRgILUZniUK5LMfNDjj8Bzs7pBMPYbQYYE04upl7Cj9RHYFG0BseDD72lCZuSgoDQvNF7QmvQ3uU00TPRFWTpu}
   success-url: ${STRIPE_SUCCESS_URL:http://localhost:8080/api/v1/payments/webhook/success?session_id={CHECKOUT_SESSION_ID}}
   cancel-url: ${STRIPE_CANCEL_URL:http://localhost:8080/api/v1/payments/webhook/cancel?session_id={CHECKOUT_SESSION_ID}}
-  currency: ${STRIPE_CURRENCY:usd}
+  currency: ${STRIPE_CURRENCY:bdt}
 
 payment:
   expiration:
